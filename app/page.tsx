@@ -112,7 +112,7 @@ export default function HomePage() {
             <Link2 className="h-6 w-6 text-white" />
             <span className="text-lg font-semibold text-white">LinkHub</span>
           </div>
-          <p className="text-purple-300">© 2024 LinkHub.</p>
+          <p className="text-purple-300">© 2025 LinkHub.</p>
         </div>
       </footer>
     </div>

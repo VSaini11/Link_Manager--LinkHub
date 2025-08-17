@@ -14,8 +14,10 @@ import {
   Menu,
   X,
   BarChart3,
+  TrendingUp,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import AnalyticsView from "@/components/ModernAnalyticsView";
 
 interface Link {
   _id: string;
@@ -41,6 +43,7 @@ export default function DashboardClient({ user }: { user: User }) {
   const [showQRCode, setShowQRCode] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false); // Add loading state
+  const [currentView, setCurrentView] = useState<'dashboard' | 'analytics'>('dashboard'); // Add view state
   const [formData, setFormData] = useState({
     originalUrl: "",
     customName: "",
@@ -251,24 +254,28 @@ export default function DashboardClient({ user }: { user: User }) {
           {/* Navigation */}
           <div className="flex-1 p-6">
             <nav className="space-y-2">
-              <a href="#" className="flex items-center space-x-3 px-4 py-3 text-white bg-white/10 rounded-lg">
+              <button 
+                onClick={() => setCurrentView('dashboard')}
+                className={`flex items-center space-x-3 px-4 py-3 w-full text-left rounded-lg transition-colors ${
+                  currentView === 'dashboard' 
+                    ? 'text-white bg-white/10' 
+                    : 'text-purple-300 hover:text-white hover:bg-white/10'
+                }`}
+              >
                 <BarChart3 className="h-5 w-5" />
                 <span>Dashboard</span>
-              </a>
-              <a
-                href="#"
-                className="flex items-center space-x-3 px-4 py-3 text-purple-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+              </button>
+              <button
+                onClick={() => setCurrentView('analytics')}
+                className={`flex items-center space-x-3 px-4 py-3 w-full text-left rounded-lg transition-colors ${
+                  currentView === 'analytics' 
+                    ? 'text-white bg-white/10' 
+                    : 'text-purple-300 hover:text-white hover:bg-white/10'
+                }`}
               >
-                <Link2 className="h-5 w-5" />
-                <span>My Links</span>
-              </a>
-              <a
-                href="#"
-                className="flex items-center space-x-3 px-4 py-3 text-purple-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-              >
-                <QrCode className="h-5 w-5" />
-                <span>QR Codes</span>
-              </a>
+                <TrendingUp className="h-5 w-5" />
+                <span>Analytics</span>
+              </button>
             </nav>
           </div>
 
@@ -305,121 +312,131 @@ export default function DashboardClient({ user }: { user: User }) {
               <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-white hover:text-purple-300">
                 <Menu className="h-6 w-6" />
               </button>
-              <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+              <h1 className="text-2xl font-bold text-white">
+                {currentView === 'dashboard' ? 'Dashboard' : 'Analytics'}
+              </h1>
             </div>
-            <button
-              onClick={() => setShowAddForm(true)}
-              className="flex items-center space-x-2 px-4 py-2 bg-white text-purple-900 rounded-xl font-semibold hover:bg-purple-50 transition-colors"
-            >
-              <Plus className="h-4 w-4" />
-              <span>Add Link</span>
-            </button>
+            {currentView === 'dashboard' && (
+              <button
+                onClick={() => setShowAddForm(true)}
+                className="flex items-center space-x-2 px-4 py-2 bg-white text-purple-900 rounded-xl font-semibold hover:bg-purple-50 transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Add Link</span>
+              </button>
+            )}
           </div>
         </header>
 
-        {/* Dashboard Content */}
-        <main className="p-6">
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="glass-card rounded-xl p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-purple-300 text-sm">Total Links</p>
-                  <p className="text-3xl font-bold text-white">{links.length}</p>
-                </div>
-                <Link2 className="h-8 w-8 text-purple-400" />
-              </div>
-            </div>
-            <div className="glass-card rounded-xl p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-purple-300 text-sm">Total Clicks</p>
-                  <p className="text-3xl font-bold text-white">{links.reduce((sum, link) => sum + link.clicks, 0)}</p>
-                </div>
-                <BarChart3 className="h-8 w-8 text-purple-400" />
-              </div>
-            </div>
-            <div className="glass-card rounded-xl p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-purple-300 text-sm">QR Codes</p>
-                  <p className="text-3xl font-bold text-white">{links.length}</p>
-                </div>
-                <QrCode className="h-8 w-8 text-purple-400" />
-              </div>
-            </div>
-          </div>
-
-          {/* Links Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {links.map((link) => (
-              <div key={link._id} className="glass-card rounded-xl p-6 card-hover">
-                <div className="flex items-start justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-white truncate">{link.customName}</h3>
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => setShowQRCode(link.shortUrl)}
-                      className="text-purple-300 hover:text-white transition-colors"
-                    >
-                      <QrCode className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteLink(link._id)}
-                      className="text-red-400 hover:text-red-300 transition-colors"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+        {/* Main Content */}
+        <main>
+          {currentView === 'dashboard' ? (
+            <div className="p-6">
+              {/* Stats Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="glass-card rounded-xl p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-purple-300 text-sm">Total Links</p>
+                      <p className="text-3xl font-bold text-white">{links.length}</p>
+                    </div>
+                    <Link2 className="h-8 w-8 text-purple-400" />
                   </div>
                 </div>
+                <div className="glass-card rounded-xl p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-purple-300 text-sm">Total Clicks</p>
+                      <p className="text-3xl font-bold text-white">{links.reduce((sum, link) => sum + link.clicks, 0)}</p>
+                    </div>
+                    <BarChart3 className="h-8 w-8 text-purple-400" />
+                  </div>
+                </div>
+                <div className="glass-card rounded-xl p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-purple-300 text-sm">QR Codes</p>
+                      <p className="text-3xl font-bold text-white">{links.length}</p>
+                    </div>
+                    <QrCode className="h-8 w-8 text-purple-400" />
+                  </div>
+                </div>
+              </div>
 
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-purple-300 text-sm mb-1">Original URL</p>
-                    <div className="flex items-center space-x-2">
-                      <p className="text-white text-sm truncate flex-1">{link.originalUrl}</p>
-                      <button
-                        onClick={() => window.open(link.originalUrl, "_blank")}
-                        className="text-purple-300 hover:text-white transition-colors"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                      </button>
+              {/* Links Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                {links.map((link) => (
+                  <div key={link._id} className="glass-card rounded-xl p-6 card-hover">
+                    <div className="flex items-start justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-white truncate">{link.customName}</h3>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => setShowQRCode(link.shortUrl)}
+                          className="text-purple-300 hover:text-white transition-colors"
+                        >
+                          <QrCode className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteLink(link._id)}
+                          className="text-red-400 hover:text-red-300 transition-colors"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-purple-300 text-sm mb-1">Original URL</p>
+                        <div className="flex items-center space-x-2">
+                          <p className="text-white text-sm truncate flex-1">{link.originalUrl}</p>
+                          <button
+                            onClick={() => window.open(link.originalUrl, "_blank")}
+                            className="text-purple-300 hover:text-white transition-colors"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <p className="text-purple-300 text-sm mb-1">Short URL</p>
+                        <div className="flex items-center space-x-2">
+                          <p className="text-white text-sm truncate flex-1">{link.shortUrl}</p>
+                          <button
+                            onClick={() => copyToClipboard(link.shortUrl)}
+                            className="text-purple-300 hover:text-white transition-colors"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-2 border-t border-white/10">
+                        <span className="text-purple-300 text-sm">{link.clicks} clicks</span>
+                        <span className="text-purple-300 text-sm">{new Date(link.createdAt).toLocaleDateString()}</span>
+                      </div>
                     </div>
                   </div>
-
-                  <div>
-                    <p className="text-purple-300 text-sm mb-1">Short URL</p>
-                    <div className="flex items-center space-x-2">
-                      <p className="text-white text-sm truncate flex-1">{link.shortUrl}</p>
-                      <button
-                        onClick={() => copyToClipboard(link.shortUrl)}
-                        className="text-purple-300 hover:text-white transition-colors"
-                      >
-                        <Copy className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-2 border-t border-white/10">
-                    <span className="text-purple-300 text-sm">{link.clicks} clicks</span>
-                    <span className="text-purple-300 text-sm">{new Date(link.createdAt).toLocaleDateString()}</span>
-                  </div>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
 
-          {links.length === 0 && (
-            <div className="text-center py-12">
-              <Link2 className="h-16 w-16 text-purple-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-white mb-2">No links yet</h3>
-              <p className="text-purple-300 mb-6">Create your first link to get started</p>
-              <button
-                onClick={() => setShowAddForm(true)}
-                className="px-6 py-3 bg-white text-purple-900 rounded-lg font-semibold hover:bg-purple-50 transition-colors"
-              >
-                Add Your First Link
-              </button>
+              {links.length === 0 && (
+                <div className="text-center py-12">
+                  <Link2 className="h-16 w-16 text-purple-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-white mb-2">No links yet</h3>
+                  <p className="text-purple-300 mb-6">Create your first link to get started</p>
+                  <button
+                    onClick={() => setShowAddForm(true)}
+                    className="px-6 py-3 bg-white text-purple-900 rounded-lg font-semibold hover:bg-purple-50 transition-colors"
+                  >
+                    Add Your First Link
+                  </button>
+                </div>
+              )}
             </div>
+          ) : (
+            <AnalyticsView />
           )}
         </main>
       </div>
@@ -482,7 +499,7 @@ export default function DashboardClient({ user }: { user: User }) {
           <div className="glass-card rounded-2xl p-8 w-full max-w-sm text-center">
             <h2 className="text-2xl font-bold text-white mb-6">QR Code</h2>
             <div className="bg-white p-4 rounded-lg mb-6">
-              <img src={generateQRCode(showQRCode) || "/placeholder.svg"} alt="QR Code" className="w-full h-auto" />
+              <img src={generateQRCode(showQRCode)} alt="QR Code" className="w-full h-auto" />
             </div>
             <p className="text-purple-200 text-sm mb-6 break-all">{showQRCode}</p>
             <button
