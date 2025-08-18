@@ -354,7 +354,7 @@ CMD ["npm", "start"]
 
 ### Environment Variables for Production
 ```env
-MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/linkhub
+MONGODB_URI=mongodb+srv://username:password@your-cluster.mongodb.net/your-database-name
 NEXT_PUBLIC_BASE_URL=https://yourdomain.com
 NODE_ENV=production
 ```
