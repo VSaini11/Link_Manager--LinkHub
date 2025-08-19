@@ -134,17 +134,17 @@ export default function ModernAnalyticsView({ linkId }: ModernAnalyticsViewProps
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-3 sm:p-6">
         <div className="max-w-7xl mx-auto">
-          <div className="animate-pulse space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="animate-pulse space-y-4 sm:space-y-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="bg-slate-800/50 rounded-2xl h-32"></div>
+                <div key={i} className="bg-slate-800/50 rounded-xl sm:rounded-2xl h-24 sm:h-32"></div>
               ))}
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-slate-800/50 rounded-2xl h-80"></div>
-              <div className="bg-slate-800/50 rounded-2xl h-80"></div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+              <div className="bg-slate-800/50 rounded-xl sm:rounded-2xl h-60 sm:h-80"></div>
+              <div className="bg-slate-800/50 rounded-xl sm:rounded-2xl h-60 sm:h-80"></div>
             </div>
           </div>
         </div>
@@ -353,101 +353,101 @@ export default function ModernAnalyticsView({ linkId }: ModernAnalyticsViewProps
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-3 sm:p-6">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         
         {/* Top Metrics Row - Real Analytics Data */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
           {/* Total Clicks */}
-          <div className="bg-gradient-to-br from-indigo-500/20 to-purple-600/20 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
-            <div className="flex items-start justify-between mb-4">
+          <div className="bg-gradient-to-br from-indigo-500/20 to-purple-600/20 backdrop-blur-xl rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-white/10">
+            <div className="flex items-start justify-between mb-2 sm:mb-4">
               <div>
-                <h3 className="text-3xl font-bold text-white">{clickMetrics.totalClicks.toLocaleString()}</h3>
-                <p className="text-indigo-200 text-sm mt-1">TOTAL CLICKS</p>
+                <h3 className="text-lg sm:text-3xl font-bold text-white">{clickMetrics.totalClicks.toLocaleString()}</h3>
+                <p className="text-indigo-200 text-xs sm:text-sm mt-1">TOTAL CLICKS</p>
               </div>
-              <div className="p-2 bg-white/10 rounded-lg">
-                <MousePointer className="h-5 w-5 text-indigo-300" />
+              <div className="p-1 sm:p-2 bg-white/10 rounded-lg">
+                <MousePointer className="h-3 w-3 sm:h-5 sm:w-5 text-indigo-300" />
               </div>
             </div>
             
             {/* Mini chart */}
-            <div className="h-12 -mx-2">
+            <div className="h-8 sm:h-12 -mx-1 sm:-mx-2">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={sessionOverviewData.slice(-7)}>
                   <Line 
                     type="monotone" 
                     dataKey="sessions" 
                     stroke="#8B5CF6" 
-                    strokeWidth={2}
+                    strokeWidth={1.5}
                     dot={false}
                   />
                 </LineChart>
               </ResponsiveContainer>
             </div>
             
-            <div className="flex items-center mt-2">
+            <div className="flex items-center mt-1 sm:mt-2">
               {trends.totalClicks.isPositive ? (
-                <TrendingUp className="h-3 w-3 text-green-400 mr-1" />
+                <TrendingUp className="h-2 w-2 sm:h-3 sm:w-3 text-green-400 mr-1" />
               ) : (
-                <TrendingDown className="h-3 w-3 text-red-400 mr-1" />
+                <TrendingDown className="h-2 w-2 sm:h-3 sm:w-3 text-red-400 mr-1" />
               )}
-              <span className={`text-sm font-semibold ${trends.totalClicks.isPositive ? 'text-green-400' : 'text-red-400'}`}>
+              <span className={`text-xs sm:text-sm font-semibold ${trends.totalClicks.isPositive ? 'text-green-400' : 'text-red-400'}`}>
                 {trends.totalClicks.isPositive ? '+' : '-'}{trends.totalClicks.value}%
               </span>
             </div>
           </div>
 
           {/* Unique Clicks */}
-          <div className="bg-gradient-to-br from-slate-700/30 to-slate-800/50 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
-            <div className="flex items-start justify-between mb-4">
+          <div className="bg-gradient-to-br from-slate-700/30 to-slate-800/50 backdrop-blur-xl rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-white/10">
+            <div className="flex items-start justify-between mb-2 sm:mb-4">
               <div>
-                <h3 className="text-3xl font-bold text-white">{clickMetrics.uniqueClicks.toLocaleString()}</h3>
-                <p className="text-slate-300 text-sm mt-1">UNIQUE CLICKS</p>
+                <h3 className="text-lg sm:text-3xl font-bold text-white">{clickMetrics.uniqueClicks.toLocaleString()}</h3>
+                <p className="text-slate-300 text-xs sm:text-sm mt-1">UNIQUE CLICKS</p>
               </div>
-              <div className="p-2 bg-white/10 rounded-lg">
-                <Users className="h-5 w-5 text-slate-300" />
+              <div className="p-1 sm:p-2 bg-white/10 rounded-lg">
+                <Users className="h-3 w-3 sm:h-5 sm:w-5 text-slate-300" />
               </div>
             </div>
             
-            <div className="h-12 -mx-2">
+            <div className="h-8 sm:h-12 -mx-1 sm:-mx-2">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={sessionOverviewData.slice(-7)}>
                   <Line 
                     type="monotone" 
                     dataKey="visitors" 
                     stroke="#64748B" 
-                    strokeWidth={2}
+                    strokeWidth={1.5}
                     dot={false}
                   />
                 </LineChart>
               </ResponsiveContainer>
             </div>
             
-            <div className="flex items-center mt-2">
+            <div className="flex items-center mt-1 sm:mt-2">
               {trends.uniqueClicks.isPositive ? (
-                <TrendingUp className="h-3 w-3 text-green-400 mr-1" />
+                <TrendingUp className="h-2 w-2 sm:h-3 sm:w-3 text-green-400 mr-1" />
               ) : (
-                <TrendingDown className="h-3 w-3 text-red-400 mr-1" />
+                <TrendingDown className="h-2 w-2 sm:h-3 sm:w-3 text-red-400 mr-1" />
               )}
-              <span className={`text-sm font-semibold ${trends.uniqueClicks.isPositive ? 'text-green-400' : 'text-red-400'}`}>
+              <span className={`text-xs sm:text-sm font-semibold ${trends.uniqueClicks.isPositive ? 'text-green-400' : 'text-red-400'}`}>
                 {trends.uniqueClicks.isPositive ? '+' : '-'}{trends.uniqueClicks.value}%
               </span>
             </div>
           </div>
 
           {/* CTR (Click-Through Rate) */}
-          <div className="bg-gradient-to-br from-slate-700/30 to-slate-800/50 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
-            <div className="flex items-start justify-between mb-4">
+          <div className="bg-gradient-to-br from-slate-700/30 to-slate-800/50 backdrop-blur-xl rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-white/10">
+            <div className="flex items-start justify-between mb-2 sm:mb-4">
               <div>
-                <h3 className="text-3xl font-bold text-white">{clickMetrics.ctr.toFixed(2)}%</h3>
-                <p className="text-slate-300 text-sm mt-1">CTR (CLICK-THROUGH RATE)</p>
+                <h3 className="text-lg sm:text-3xl font-bold text-white">{clickMetrics.ctr.toFixed(2)}%</h3>
+                <p className="text-slate-300 text-xs sm:text-sm mt-1">CTR (CLICK-THROUGH RATE)</p>
               </div>
-              <div className="p-2 bg-white/10 rounded-lg">
-                <TrendingUp className="h-5 w-5 text-slate-300" />
+              <div className="p-1 sm:p-2 bg-white/10 rounded-lg">
+                <TrendingUp className="h-3 w-3 sm:h-5 sm:w-5 text-slate-300" />
               </div>
             </div>
             
-            <div className="h-12 -mx-2">
+            <div className="h-8 sm:h-12 -mx-1 sm:-mx-2">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={sessionOverviewData.slice(-7)}>
                   <Area 
@@ -461,31 +461,31 @@ export default function ModernAnalyticsView({ linkId }: ModernAnalyticsViewProps
               </ResponsiveContainer>
             </div>
             
-            <div className="flex items-center mt-2">
+            <div className="flex items-center mt-1 sm:mt-2">
               {trends.ctr.isPositive ? (
-                <TrendingUp className="h-3 w-3 text-green-400 mr-1" />
+                <TrendingUp className="h-2 w-2 sm:h-3 sm:w-3 text-green-400 mr-1" />
               ) : (
-                <TrendingDown className="h-3 w-3 text-red-400 mr-1" />
+                <TrendingDown className="h-2 w-2 sm:h-3 sm:w-3 text-red-400 mr-1" />
               )}
-              <span className={`text-sm font-semibold ${trends.ctr.isPositive ? 'text-green-400' : 'text-red-400'}`}>
+              <span className={`text-xs sm:text-sm font-semibold ${trends.ctr.isPositive ? 'text-green-400' : 'text-red-400'}`}>
                 {trends.ctr.isPositive ? '+' : '-'}{trends.ctr.value}%
               </span>
             </div>
           </div>
 
           {/* Click Frequency */}
-          <div className="bg-gradient-to-br from-slate-700/30 to-slate-800/50 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
-            <div className="flex items-start justify-between mb-4">
+          <div className="bg-gradient-to-br from-slate-700/30 to-slate-800/50 backdrop-blur-xl rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-white/10">
+            <div className="flex items-start justify-between mb-2 sm:mb-4">
               <div>
-                <h3 className="text-3xl font-bold text-white">{clickMetrics.clickFrequency.toFixed(1)}</h3>
-                <p className="text-slate-300 text-sm mt-1">AVG CLICKS/LINK</p>
+                <h3 className="text-lg sm:text-3xl font-bold text-white">{clickMetrics.clickFrequency.toFixed(1)}</h3>
+                <p className="text-slate-300 text-xs sm:text-sm mt-1">AVG CLICKS/LINK</p>
               </div>
-              <div className="p-2 bg-white/10 rounded-lg">
-                <Activity className="h-5 w-5 text-slate-300" />
+              <div className="p-1 sm:p-2 bg-white/10 rounded-lg">
+                <Activity className="h-3 w-3 sm:h-5 sm:w-5 text-slate-300" />
               </div>
             </div>
             
-            <div className="h-12 -mx-2">
+            <div className="h-8 sm:h-12 -mx-1 sm:-mx-2">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={sessionOverviewData.slice(-7)}>
                   <Area 
@@ -499,13 +499,13 @@ export default function ModernAnalyticsView({ linkId }: ModernAnalyticsViewProps
               </ResponsiveContainer>
             </div>
             
-            <div className="flex items-center mt-2">
+            <div className="flex items-center mt-1 sm:mt-2">
               {trends.avgClicksPerLink.isPositive ? (
-                <TrendingUp className="h-3 w-3 text-green-400 mr-1" />
+                <TrendingUp className="h-2 w-2 sm:h-3 sm:w-3 text-green-400 mr-1" />
               ) : (
-                <TrendingDown className="h-3 w-3 text-red-400 mr-1" />
+                <TrendingDown className="h-2 w-2 sm:h-3 sm:w-3 text-red-400 mr-1" />
               )}
-              <span className={`text-sm font-semibold ${trends.avgClicksPerLink.isPositive ? 'text-green-400' : 'text-red-400'}`}>
+              <span className={`text-xs sm:text-sm font-semibold ${trends.avgClicksPerLink.isPositive ? 'text-green-400' : 'text-red-400'}`}>
                 {trends.avgClicksPerLink.isPositive ? '+' : '-'}{trends.avgClicksPerLink.value}%
               </span>
             </div>
@@ -513,25 +513,25 @@ export default function ModernAnalyticsView({ linkId }: ModernAnalyticsViewProps
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           
           {/* Sessions Overview - Left Column */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
             
             {/* Individual Links Overview */}
-            <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
-              <div className="flex items-center justify-between mb-6">
+            <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/10">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-4">
                 <div>
-                  <h3 className="text-xl font-semibold text-white">Links Overview</h3>
-                  <p className="text-slate-400 text-sm mt-1">Performance metrics for each link</p>
+                  <h3 className="text-lg sm:text-xl font-semibold text-white">Links Overview</h3>
+                  <p className="text-slate-400 text-xs sm:text-sm mt-1">Performance metrics for each link</p>
                 </div>
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-2 bg-slate-700/50 rounded-lg p-1">
+                <div className="flex items-center justify-center sm:justify-end">
+                  <div className="flex items-center space-x-1 sm:space-x-2 bg-slate-700/50 rounded-lg p-1 overflow-x-auto">
                     {['today', '7d', '1m', '3m', '2024'].map((period) => (
                       <button
                         key={period}
                         onClick={() => setSelectedTimePeriod(period as any)}
-                        className={`px-3 py-1 text-sm font-medium rounded transition-all duration-200 ${
+                        className={`px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium rounded transition-all duration-200 whitespace-nowrap ${
                           selectedTimePeriod === period
                             ? 'bg-indigo-500 text-white shadow-lg'
                             : 'text-slate-400 hover:text-white hover:bg-slate-600/50'
@@ -545,7 +545,7 @@ export default function ModernAnalyticsView({ linkId }: ModernAnalyticsViewProps
               </div>
               
               {/* Individual Link Cards */}
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {links.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="text-slate-400 text-lg mb-2">No links found</div>
@@ -569,11 +569,11 @@ export default function ModernAnalyticsView({ linkId }: ModernAnalyticsViewProps
                     };
 
                     return (
-                      <div key={link._id} className="bg-gradient-to-r from-slate-700/30 to-slate-800/30 rounded-xl p-4 border border-white/5 hover:border-white/10 transition-all duration-300 hover:bg-slate-700/40">
-                        <div className="flex items-center justify-between">
+                      <div key={link._id} className="bg-gradient-to-r from-slate-700/30 to-slate-800/30 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-white/5 hover:border-white/10 transition-all duration-300 hover:bg-slate-700/40">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center space-x-2 mb-2">
-                              <h4 className="text-white font-medium truncate">
+                              <h4 className="text-white text-sm sm:text-base font-medium truncate">
                                 {link.customName || 'Untitled Link'}
                               </h4>
                               {linkPerformance.isTopPerformer && (
@@ -590,7 +590,7 @@ export default function ModernAnalyticsView({ linkId }: ModernAnalyticsViewProps
                                 → {link.originalUrl}
                               </div>
                             </div>
-                            <div className="flex items-center space-x-4 text-xs">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-xs gap-1 sm:gap-0">
                               <span className="text-slate-500">
                                 Created {linkPerformance.createdDaysAgo}d ago
                               </span>
@@ -599,12 +599,12 @@ export default function ModernAnalyticsView({ linkId }: ModernAnalyticsViewProps
                               </span>
                             </div>
                           </div>
-                          <div className="text-right ml-4">
-                            <div className={`text-2xl font-bold ${getTrendColor(linkPerformance.totalClicks)}`}>
+                          <div className="text-center sm:text-right">
+                            <div className={`text-xl sm:text-2xl font-bold ${getTrendColor(linkPerformance.totalClicks)}`}>
                               {linkPerformance.totalClicks.toLocaleString()}
                             </div>
                             <div className="text-xs text-slate-400">clicks</div>
-                            <div className="mt-2 flex items-center space-x-1">
+                            <div className="mt-1 sm:mt-2 flex items-center justify-center sm:justify-end space-x-1">
                               <Activity className="w-3 h-3 text-slate-400" />
                               <span className="text-xs text-slate-400">
                                 {linkPerformance.totalClicks > 0 ? 'Active' : 'Inactive'}
@@ -628,49 +628,49 @@ export default function ModernAnalyticsView({ linkId }: ModernAnalyticsViewProps
               )}
               
               {/* Summary Metrics below links */}
-              <div className="grid grid-cols-4 gap-6 mt-6 pt-6 border-t border-white/10">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-white/10">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{engagementMetrics.timeOnPage}</div>
+                  <div className="text-lg sm:text-2xl font-bold text-white">{engagementMetrics.timeOnPage}</div>
                   <div className="text-xs text-slate-400 mt-1">Avg Time on Page</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{engagementMetrics.bounceRate}%</div>
+                  <div className="text-lg sm:text-2xl font-bold text-white">{engagementMetrics.bounceRate}</div>
                   <div className="text-xs text-slate-400 mt-1">Bounce Rate</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{engagementMetrics.pagesPerSession}</div>
+                  <div className="text-lg sm:text-2xl font-bold text-white">{engagementMetrics.pagesPerSession}</div>
                   <div className="text-xs text-slate-400 mt-1">Pages/Session</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{analytics.summary?.totalLinks || 0}</div>
+                  <div className="text-lg sm:text-2xl font-bold text-white">{analytics.summary?.totalLinks || 0}</div>
                   <div className="text-xs text-slate-400 mt-1">Total Links</div>
                 </div>
               </div>
             </div>
 
             {/* Traffic Source Stats */}
-            <div className="grid grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
               {trafficSources.slice(0, 3).map((source, index) => (
-                <div key={index} className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl p-6 border border-white/10 text-center">
-                  <div className="mb-3">
+                <div key={index} className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/10 text-center">
+                  <div className="mb-2 sm:mb-3">
                     <div className="text-xs text-slate-400 uppercase tracking-wide">
                       {index === 0 ? 'TOP SOURCE' : index === 1 ? 'SECONDARY' : 'THIRD SOURCE'}
                     </div>
-                    <div className="text-lg font-semibold text-white mt-1">{source.name}</div>
+                    <div className="text-sm sm:text-lg font-semibold text-white mt-1">{source.name}</div>
                   </div>
-                  <div className="text-3xl font-bold text-white">{source.value.toLocaleString()}</div>
+                  <div className="text-xl sm:text-3xl font-bold text-white">{source.value.toLocaleString()}</div>
                   <div className="text-xs text-slate-400 mt-1">clicks ({source.percentage}%)</div>
                 </div>
               ))}
               
               {/* Fill empty slots if less than 3 sources */}
               {Array.from({ length: Math.max(0, 3 - trafficSources.length) }).map((_, index) => (
-                <div key={`empty-${index}`} className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl p-6 border border-white/10 text-center">
-                  <div className="mb-3">
+                <div key={`empty-${index}`} className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/10 text-center">
+                  <div className="mb-2 sm:mb-3">
                     <div className="text-xs text-slate-400 uppercase tracking-wide">NO DATA</div>
-                    <div className="text-lg font-semibold text-white mt-1">--</div>
+                    <div className="text-sm sm:text-lg font-semibold text-white mt-1">--</div>
                   </div>
-                  <div className="text-3xl font-bold text-white">0</div>
+                  <div className="text-xl sm:text-3xl font-bold text-white">0</div>
                   <div className="text-xs text-slate-400 mt-1">clicks (0%)</div>
                 </div>
               ))}
@@ -678,28 +678,28 @@ export default function ModernAnalyticsView({ linkId }: ModernAnalyticsViewProps
           </div>
 
           {/* Right Column - Device & Geographic Analytics */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             
             {/* Device Types Analysis */}
-            <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-white">Device Analytics</h3>
+            <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/10">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <h3 className="text-base sm:text-lg font-semibold text-white">Device Analytics</h3>
                 <button>
-                  <MoreHorizontal className="h-5 w-5 text-slate-400" />
+                  <MoreHorizontal className="h-4 w-4 sm:h-5 sm:w-5 text-slate-400" />
                 </button>
               </div>
               
-              <div className="relative mb-6">
+              <div className="relative mb-4 sm:mb-6">
                 {deviceData.length > 0 ? (
                   <>
-                    <ResponsiveContainer width="100%" height={200}>
+                    <ResponsiveContainer width="100%" height={160}>
                       <PieChart>
                         <Pie
                           data={deviceData}
                           cx="50%"
                           cy="50%"
-                          innerRadius={60}
-                          outerRadius={90}
+                          innerRadius={40}
+                          outerRadius={70}
                           paddingAngle={2}
                           dataKey="value"
                         >
@@ -744,20 +744,20 @@ export default function ModernAnalyticsView({ linkId }: ModernAnalyticsViewProps
               </div>
               
               {/* Device breakdown */}
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {deviceData.length > 0 ? deviceData.map((device, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-white/10 rounded-lg">
-                        {device.name === 'Mobile' && <Smartphone className="h-4 w-4 text-blue-400" />}
-                        {device.name === 'Desktop' && <Monitor className="h-4 w-4 text-blue-400" />}
-                        {device.name === 'Tablet' && <Tablet className="h-4 w-4 text-blue-400" />}
-                        {!['Mobile', 'Desktop', 'Tablet'].includes(device.name) && <Monitor className="h-4 w-4 text-blue-400" />}
+                  <div key={index} className="flex items-center justify-between p-2 sm:p-3 bg-white/5 rounded-lg">
+                    <div className="flex items-center space-x-2 sm:space-x-3">
+                      <div className="p-1 sm:p-2 bg-white/10 rounded-lg">
+                        {device.name === 'Mobile' && <Smartphone className="h-3 w-3 sm:h-4 sm:w-4 text-blue-400" />}
+                        {device.name === 'Desktop' && <Monitor className="h-3 w-3 sm:h-4 sm:w-4 text-blue-400" />}
+                        {device.name === 'Tablet' && <Tablet className="h-3 w-3 sm:h-4 sm:w-4 text-blue-400" />}
+                        {!['Mobile', 'Desktop', 'Tablet'].includes(device.name) && <Monitor className="h-3 w-3 sm:h-4 sm:w-4 text-blue-400" />}
                       </div>
-                      <span className="text-white font-medium text-sm">{device.name}</span>
+                      <span className="text-white font-medium text-xs sm:text-sm">{device.name}</span>
                     </div>
                     <div className="text-right">
-                      <div className="text-white font-bold">{device.value}</div>
+                      <div className="text-white font-bold text-sm sm:text-base">{device.value}</div>
                       <div className="text-xs text-slate-400">{device.percentage}%</div>
                     </div>
                   </div>
@@ -770,27 +770,27 @@ export default function ModernAnalyticsView({ linkId }: ModernAnalyticsViewProps
             </div>
 
             {/* Geographic Distribution */}
-            <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-white">Geographic Analytics</h3>
+            <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/10">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <h3 className="text-base sm:text-lg font-semibold text-white">Geographic Analytics</h3>
                 <button>
-                  <MoreHorizontal className="h-5 w-5 text-slate-400" />
+                  <MoreHorizontal className="h-4 w-4 sm:h-5 sm:w-5 text-slate-400" />
                 </button>
               </div>
               
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {geographicData.length > 0 ? geographicData.slice(0, 5).map((location, index) => (
                   <div key={index} className="relative">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center space-x-3">
-                        <Globe className="h-4 w-4 text-emerald-400" />
+                    <div className="flex items-center justify-between mb-2 sm:mb-3">
+                      <div className="flex items-center space-x-2 sm:space-x-3">
+                        <Globe className="h-3 w-3 sm:h-4 sm:w-4 text-emerald-400" />
                         <div>
-                          <div className="text-white font-medium text-sm">{location.country}</div>
+                          <div className="text-white font-medium text-xs sm:text-sm">{location.country}</div>
                           <div className="text-xs text-slate-400">#{index + 1} location</div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-lg font-bold text-white">{location.clicks}</div>
+                        <div className="text-sm sm:text-lg font-bold text-white">{location.clicks}</div>
                         <div className="text-xs text-slate-400">{location.percentage}%</div>
                       </div>
                     </div>

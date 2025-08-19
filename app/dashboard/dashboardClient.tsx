@@ -222,8 +222,11 @@ export default function DashboardClient({ user }: { user: User }) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-        <div className="text-white text-xl">Loading...</div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
+        <div className="text-white text-center">
+          <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-sm sm:text-xl">Loading...</p>
+        </div>
       </div>
     );
   }
@@ -306,23 +309,24 @@ export default function DashboardClient({ user }: { user: User }) {
       {/* Main Content */}
       <div className="lg:ml-64">
         {/* Header */}
-        <header className="bg-black/20 backdrop-blur-xl border-b border-white/10 px-6 py-4">
+        <header className="bg-black/20 backdrop-blur-xl border-b border-white/10 px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3 sm:space-x-4">
               <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-white hover:text-purple-300">
-                <Menu className="h-6 w-6" />
+                <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
               </button>
-              <h1 className="text-2xl font-bold text-white">
+              <h1 className="text-lg sm:text-2xl font-bold text-white">
                 {currentView === 'dashboard' ? 'Dashboard' : 'Analytics'}
               </h1>
             </div>
             {currentView === 'dashboard' && (
               <button
                 onClick={() => setShowAddForm(true)}
-                className="flex items-center space-x-2 px-4 py-2 bg-white text-purple-900 rounded-xl font-semibold hover:bg-purple-50 transition-colors"
+                className="flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 bg-white text-purple-900 rounded-lg sm:rounded-xl font-semibold hover:bg-purple-50 transition-colors text-sm sm:text-base"
               >
-                <Plus className="h-4 w-4" />
-                <span>Add Link</span>
+                <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Add Link</span>
+                <span className="sm:hidden">Add</span>
               </button>
             )}
           </div>
@@ -331,89 +335,89 @@ export default function DashboardClient({ user }: { user: User }) {
         {/* Main Content */}
         <main>
           {currentView === 'dashboard' ? (
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="glass-card rounded-xl p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+                <div className="glass-card rounded-lg sm:rounded-xl p-4 sm:p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-purple-300 text-sm">Total Links</p>
-                      <p className="text-3xl font-bold text-white">{links.length}</p>
+                      <p className="text-purple-300 text-xs sm:text-sm">Total Links</p>
+                      <p className="text-2xl sm:text-3xl font-bold text-white">{links.length}</p>
                     </div>
-                    <Link2 className="h-8 w-8 text-purple-400" />
+                    <Link2 className="h-6 w-6 sm:h-8 sm:w-8 text-purple-400" />
                   </div>
                 </div>
-                <div className="glass-card rounded-xl p-6">
+                <div className="glass-card rounded-lg sm:rounded-xl p-4 sm:p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-purple-300 text-sm">Total Clicks</p>
-                      <p className="text-3xl font-bold text-white">{links.reduce((sum, link) => sum + link.clicks, 0)}</p>
+                      <p className="text-purple-300 text-xs sm:text-sm">Total Clicks</p>
+                      <p className="text-2xl sm:text-3xl font-bold text-white">{links.reduce((sum, link) => sum + link.clicks, 0)}</p>
                     </div>
-                    <BarChart3 className="h-8 w-8 text-purple-400" />
+                    <BarChart3 className="h-6 w-6 sm:h-8 sm:w-8 text-purple-400" />
                   </div>
                 </div>
-                <div className="glass-card rounded-xl p-6">
+                <div className="glass-card rounded-lg sm:rounded-xl p-4 sm:p-6 sm:col-span-2 lg:col-span-1">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-purple-300 text-sm">QR Codes</p>
-                      <p className="text-3xl font-bold text-white">{links.length}</p>
+                      <p className="text-purple-300 text-xs sm:text-sm">QR Codes</p>
+                      <p className="text-2xl sm:text-3xl font-bold text-white">{links.length}</p>
                     </div>
-                    <QrCode className="h-8 w-8 text-purple-400" />
+                    <QrCode className="h-6 w-6 sm:h-8 sm:w-8 text-purple-400" />
                   </div>
                 </div>
               </div>
 
               {/* Links Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                 {links.map((link) => (
-                  <div key={link._id} className="glass-card rounded-xl p-6 card-hover">
-                    <div className="flex items-start justify-between mb-4">
-                      <h3 className="text-lg font-semibold text-white truncate">{link.customName}</h3>
-                      <div className="flex items-center space-x-2">
+                  <div key={link._id} className="glass-card rounded-lg sm:rounded-xl p-4 sm:p-6 card-hover">
+                    <div className="flex items-start justify-between mb-3 sm:mb-4">
+                      <h3 className="text-base sm:text-lg font-semibold text-white truncate pr-2">{link.customName}</h3>
+                      <div className="flex items-center space-x-2 flex-shrink-0">
                         <button
                           onClick={() => setShowQRCode(link.shortUrl)}
-                          className="text-purple-300 hover:text-white transition-colors"
+                          className="text-purple-300 hover:text-white transition-colors p-1"
                         >
                           <QrCode className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => handleDeleteLink(link._id)}
-                          className="text-red-400 hover:text-red-300 transition-colors"
+                          className="text-red-400 hover:text-red-300 transition-colors p-1"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-2 sm:space-y-3">
                       <div>
-                        <p className="text-purple-300 text-sm mb-1">Original URL</p>
+                        <p className="text-purple-300 text-xs sm:text-sm mb-1">Original URL</p>
                         <div className="flex items-center space-x-2">
-                          <p className="text-white text-sm truncate flex-1">{link.originalUrl}</p>
+                          <p className="text-white text-xs sm:text-sm truncate flex-1">{link.originalUrl}</p>
                           <button
                             onClick={() => window.open(link.originalUrl, "_blank")}
-                            className="text-purple-300 hover:text-white transition-colors"
+                            className="text-purple-300 hover:text-white transition-colors p-1 flex-shrink-0"
                           >
-                            <ExternalLink className="h-4 w-4" />
+                            <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4" />
                           </button>
                         </div>
                       </div>
 
                       <div>
-                        <p className="text-purple-300 text-sm mb-1">Short URL</p>
+                        <p className="text-purple-300 text-xs sm:text-sm mb-1">Short URL</p>
                         <div className="flex items-center space-x-2">
-                          <p className="text-white text-sm truncate flex-1">{link.shortUrl}</p>
+                          <p className="text-white text-xs sm:text-sm truncate flex-1">{link.shortUrl}</p>
                           <button
                             onClick={() => copyToClipboard(link.shortUrl)}
-                            className="text-purple-300 hover:text-white transition-colors"
+                            className="text-purple-300 hover:text-white transition-colors p-1 flex-shrink-0"
                           >
-                            <Copy className="h-4 w-4" />
+                            <Copy className="h-3 w-3 sm:h-4 sm:w-4" />
                           </button>
                         </div>
                       </div>
 
                       <div className="flex items-center justify-between pt-2 border-t border-white/10">
-                        <span className="text-purple-300 text-sm">{link.clicks} clicks</span>
+                        <span className="text-purple-300 text-xs sm:text-sm font-medium">{link.clicks} clicks</span>
                         <span className="text-purple-300 text-sm">{new Date(link.createdAt).toLocaleDateString()}</span>
                       </div>
                     </div>
@@ -422,13 +426,13 @@ export default function DashboardClient({ user }: { user: User }) {
               </div>
 
               {links.length === 0 && (
-                <div className="text-center py-12">
-                  <Link2 className="h-16 w-16 text-purple-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-white mb-2">No links yet</h3>
-                  <p className="text-purple-300 mb-6">Create your first link to get started</p>
+                <div className="text-center py-12 sm:py-16">
+                  <Link2 className="h-12 w-12 sm:h-16 sm:w-16 text-purple-400 mx-auto mb-4" />
+                  <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">No links yet</h3>
+                  <p className="text-purple-300 mb-6 text-sm sm:text-base">Create your first link to get started</p>
                   <button
                     onClick={() => setShowAddForm(true)}
-                    className="px-6 py-3 bg-white text-purple-900 rounded-lg font-semibold hover:bg-purple-50 transition-colors"
+                    className="px-4 sm:px-6 py-2 sm:py-3 bg-white text-purple-900 rounded-lg font-semibold hover:bg-purple-50 transition-colors text-sm sm:text-base"
                   >
                     Add Your First Link
                   </button>
@@ -443,46 +447,46 @@ export default function DashboardClient({ user }: { user: User }) {
 
       {/* Add Link Modal */}
       {showAddForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-6 z-50">
-          <div className="glass-card rounded-2xl p-8 w-full max-w-md">
-            <h2 className="text-2xl font-bold text-white mb-6">Add New Link</h2>
-            <form onSubmit={handleAddLink} className="space-y-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 sm:p-6 z-50">
+          <div className="glass-card rounded-xl sm:rounded-2xl p-6 sm:p-8 w-full max-w-md mx-4">
+            <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">Add New Link</h2>
+            <form onSubmit={handleAddLink} className="space-y-3 sm:space-y-4">
               <div>
-                <label className="block text-sm font-medium text-purple-200 mb-2">Original URL</label>
+                <label className="block text-xs sm:text-sm font-medium text-purple-200 mb-2">Original URL</label>
                 <input
                   type="url"
                   required
                   value={formData.originalUrl}
                   onChange={(e) => setFormData({ ...formData, originalUrl: e.target.value })}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm"
                   placeholder="https://example.com"
                   disabled={isSubmitting}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-purple-200 mb-2">Custom Name</label>
+                <label className="block text-xs sm:text-sm font-medium text-purple-200 mb-2">Custom Name</label>
                 <input
                   type="text"
                   required
                   value={formData.customName}
                   onChange={(e) => setFormData({ ...formData, customName: e.target.value })}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm"
                   placeholder="My awesome link"
                   disabled={isSubmitting}
                 />
               </div>
-              <div className="flex space-x-4 pt-4">
+              <div className="flex space-x-3 sm:space-x-4 pt-3 sm:pt-4">
                 <button
                   type="button"
                   onClick={() => setShowAddForm(false)}
-                  className="flex-1 py-3 border border-white/20 text-white rounded-lg font-semibold hover:bg-white/10 transition-colors"
+                  className="flex-1 py-2 sm:py-3 border border-white/20 text-white rounded-lg font-semibold hover:bg-white/10 transition-colors text-sm sm:text-base"
                   disabled={isSubmitting}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3 bg-white text-purple-900 rounded-lg font-semibold hover:bg-purple-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 py-2 sm:py-3 bg-white text-purple-900 rounded-lg font-semibold hover:bg-purple-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? "Creating..." : "Create Link"}
@@ -495,16 +499,16 @@ export default function DashboardClient({ user }: { user: User }) {
 
       {/* QR Code Modal */}
       {showQRCode && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-6 z-50">
-          <div className="glass-card rounded-2xl p-8 w-full max-w-sm text-center">
-            <h2 className="text-2xl font-bold text-white mb-6">QR Code</h2>
-            <div className="bg-white p-4 rounded-lg mb-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 sm:p-6 z-50">
+          <div className="glass-card rounded-xl sm:rounded-2xl p-6 sm:p-8 w-full max-w-sm mx-4 text-center">
+            <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">QR Code</h2>
+            <div className="bg-white p-3 sm:p-4 rounded-lg mb-4 sm:mb-6">
               <img src={generateQRCode(showQRCode)} alt="QR Code" className="w-full h-auto" />
             </div>
-            <p className="text-purple-200 text-sm mb-6 break-all">{showQRCode}</p>
+            <p className="text-purple-200 text-xs sm:text-sm mb-4 sm:mb-6 break-all">{showQRCode}</p>
             <button
               onClick={() => setShowQRCode(null)}
-              className="w-full py-3 bg-white text-purple-900 rounded-lg font-semibold hover:bg-purple-50 transition-colors"
+              className="w-full py-2 sm:py-3 bg-white text-purple-900 rounded-lg font-semibold hover:bg-purple-50 transition-colors text-sm sm:text-base"
             >
               Close
             </button>
