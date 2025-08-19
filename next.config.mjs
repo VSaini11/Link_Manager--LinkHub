@@ -23,8 +23,8 @@ const nextConfig = {
   },
   // Compress responses
   compress: true,
-  // Enable static optimization
-  output: 'standalone',
+  // Disable standalone output for Vercel deployment
+  // output: 'standalone',
   // Custom headers for SEO and security
   async headers() {
     return [
