@@ -40,6 +40,36 @@
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
   }
 
+  /* Modal backdrop styling */
+  .modal-overlay {
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .modal-content {
+    background: rgba(15, 23, 42, 0.98); /* slate-900 with transparency */
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(71, 85, 105, 0.3); /* slate-600 with transparency */
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75);
+  }
+
+  /* Improve text readability in modal */
+  .prose-modal {
+    line-height: 1.7;
+    font-size: 16px;
+  }
+
+  .prose-modal h1, .prose-modal h2, .prose-modal h3 {
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+  }
+
+  .prose-modal p {
+    margin-bottom: 1em;
+  }
+
   
 
  

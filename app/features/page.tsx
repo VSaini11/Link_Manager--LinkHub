@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { Link2, BarChart3, QrCode, Shield, Zap, Users, Globe, Smartphone, TrendingUp } from "lucide-react"
 import Link from "next/link"
+import Navigation from "@/components/Navigation"
 
 export const metadata: Metadata = {
   title: "Features - Advanced URL Shortener Tools | LinkHub",
@@ -82,23 +83,7 @@ export default function FeaturesPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-black to-slate-900">
       {/* Navigation */}
-      <nav className="flex items-center justify-between p-6 lg:px-8">
-        <Link href="/" className="flex items-center space-x-2">
-          <Link2 className="h-8 w-8 text-white" />
-          <span className="text-2xl font-bold text-white">LinkHub</span>
-        </Link>
-        <div className="flex items-center space-x-4">
-          <Link href="/login" className="px-4 py-2 text-white hover:text-purple-300 transition-colors">
-            Login
-          </Link>
-          <Link
-            href="/signup"
-            className="px-6 py-2 bg-white text-purple-900 rounded-xl font-semibold hover:bg-purple-50 transition-colors"
-          >
-            Get Started
-          </Link>
-        </div>
-      </nav>
+      <Navigation />
 
       {/* Header */}
       <div className="text-center px-6 py-16">

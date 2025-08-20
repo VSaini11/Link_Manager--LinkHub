@@ -36,6 +36,14 @@ module.exports = {
       priority: 0.8,
       changefreq: 'weekly',
     }),
+    await config.transform(config, '/blog', {
+      priority: 0.9,
+      changefreq: 'daily',
+    }),
+    await config.transform(config, '/reviews', {
+      priority: 0.8,
+      changefreq: 'daily',
+    }),
     await config.transform(config, '/contact', {
       priority: 0.6,
       changefreq: 'monthly',

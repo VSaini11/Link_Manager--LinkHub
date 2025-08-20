@@ -7,7 +7,11 @@ export const dbConnect = async (): Promise<void> => {
   if (isConnected) return;
 
   try {
-    const db = await mongoose.connect(process.env.MONGODB_URI!, {
+    if (!process.env.MONGODB_URI) {
+      throw new Error("MONGODB_URI environment variable is not defined");
+    }
+
+    const db = await mongoose.connect(process.env.MONGODB_URI, {
       dbName: "linkManagerDB",
     });
 
@@ -15,6 +19,8 @@ export const dbConnect = async (): Promise<void> => {
     console.log("✅ MongoDB connected");
   } catch (error) {
     console.error("❌ MongoDB connection error:", error);
-    throw new Error("MongoDB connection failed");
+    isConnected = false;
+    // Don't throw error to allow graceful degradation
+    console.warn("⚠️ MongoDB connection failed, API will return empty data");
   }
 };
