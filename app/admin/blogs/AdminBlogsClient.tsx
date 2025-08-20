@@ -392,51 +392,45 @@ export default function AdminBlogsClient() {
                               Review
                             </Button>
                           </DialogTrigger>
-                          <DialogContent className="w-[95vw] max-w-6xl max-h-[90vh] overflow-y-auto mx-auto">
-                            <DialogHeader>
-                              <DialogTitle className="text-lg sm:text-xl">{selectedBlog?.title}</DialogTitle>
-                              <DialogDescription>
+                          <DialogContent className="w-[98vw] max-w-5xl max-h-[95vh] mx-auto flex flex-col bg-white shadow-2xl border-2 border-gray-300 rounded-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95">
+                            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm -z-10" />
+                            <DialogHeader className="flex-shrink-0 pb-6 border-b border-gray-200">
+                              <DialogTitle className="text-xl font-bold text-gray-900 mb-2">{selectedBlog?.title}</DialogTitle>
+                              <DialogDescription className="text-gray-600 text-base">
                                 Review and manage this blog submission
                               </DialogDescription>
                             </DialogHeader>
                             
                             {selectedBlog && (
-                              <div className="space-y-4 sm:space-y-6">
+                              <div className="flex-1 overflow-y-auto space-y-6 px-2 py-4 min-h-0">
                                 {/* Submission Info Grid */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 p-3 sm:p-4 bg-gray-50 rounded-lg">
-                                  <div>
-                                    <span className="font-semibold text-gray-700">Submitter:</span>
-                                    <p className="text-gray-900 text-sm sm:text-base">{selectedBlog.submitterName}</p>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                                  <div className="space-y-2">
+                                    <span className="font-semibold text-gray-800 text-sm">Submitter:</span>
+                                    <p className="text-gray-900 font-medium">{selectedBlog.submitterName}</p>
+                                    <p className="text-gray-600 text-sm break-all">{selectedBlog.submitterEmail}</p>
                                   </div>
-                                  <div>
-                                    <span className="font-semibold text-gray-700">Email:</span>
-                                    <p className="text-gray-900 text-sm sm:text-base break-all">{selectedBlog.submitterEmail}</p>
+                                  <div className="space-y-2">
+                                    <span className="font-semibold text-gray-800 text-sm">Category:</span>
+                                    <p className="text-gray-900 font-medium">{selectedBlog.category}</p>
                                   </div>
-                                  <div>
-                                    <span className="font-semibold text-gray-700">Category:</span>
-                                    <p className="text-gray-900 text-sm sm:text-base">{selectedBlog.category}</p>
+                                  <div className="space-y-2">
+                                    <span className="font-semibold text-gray-800 text-sm">Status:</span>
+                                    <div>{getStatusBadge(selectedBlog)}</div>
                                   </div>
-                                  <div>
-                                    <span className="font-semibold text-gray-700">Status:</span>
-                                    <div className="mt-1">{getStatusBadge(selectedBlog)}</div>
-                                  </div>
-                                  <div>
-                                    <span className="font-semibold text-gray-700">Submitted:</span>
-                                    <p className="text-gray-900">{new Date(selectedBlog.createdAt).toLocaleString()}</p>
-                                  </div>
-                                  <div>
-                                    <span className="font-semibold text-gray-700">Read Time:</span>
-                                    <p className="text-gray-900">{selectedBlog.readTime} minutes</p>
+                                  <div className="space-y-2">
+                                    <span className="font-semibold text-gray-800 text-sm">Submitted:</span>
+                                    <p className="text-gray-900 text-sm">{new Date(selectedBlog.createdAt).toLocaleDateString()}</p>
                                   </div>
                                 </div>
 
                                 {/* Tags */}
                                 {selectedBlog.tags.length > 0 && (
-                                  <div>
-                                    <h4 className="font-semibold mb-2 text-gray-700">Tags:</h4>
+                                  <div className="space-y-3">
+                                    <h4 className="font-semibold text-gray-800 text-base">Tags:</h4>
                                     <div className="flex flex-wrap gap-2">
                                       {selectedBlog.tags.map((tag, index) => (
-                                        <Badge key={index} variant="outline">
+                                        <Badge key={index} variant="outline" className="text-sm px-3 py-1">
                                           {tag}
                                         </Badge>
                                       ))}
@@ -445,18 +439,18 @@ export default function AdminBlogsClient() {
                                 )}
 
                                 {/* Excerpt */}
-                                <div>
-                                  <h4 className="font-semibold mb-3 text-gray-700">Excerpt:</h4>
-                                  <div className="p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+                                <div className="space-y-3">
+                                  <h4 className="font-semibold text-gray-800 text-base">Excerpt:</h4>
+                                  <div className="p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg border-l-4 border-blue-500">
                                     <p className="text-gray-800 leading-relaxed">{selectedBlog.excerpt}</p>
                                   </div>
                                 </div>
 
                                 {/* Full Content */}
-                                <div>
-                                  <h4 className="font-semibold mb-3 text-gray-700">Full Content:</h4>
-                                  <div className="border rounded-lg bg-white">
-                                    <div className="max-h-96 overflow-y-auto p-6">
+                                <div className="space-y-3">
+                                  <h4 className="font-semibold text-gray-800 text-base">Full Content:</h4>
+                                  <div className="border-2 border-gray-200 rounded-lg bg-white shadow-sm">
+                                    <div className="max-h-48 overflow-y-auto p-6">
                                       <div className="prose prose-sm max-w-none">
                                         <div className="whitespace-pre-wrap text-gray-800 leading-relaxed">
                                           {selectedBlog?.content || 'No content available'}
@@ -464,52 +458,54 @@ export default function AdminBlogsClient() {
                                       </div>
                                     </div>
                                   </div>
-                                  <div className="mt-2 text-sm text-gray-500">
+                                  <div className="text-sm text-gray-600 bg-gray-50 px-3 py-1 rounded">
                                     Word count: {selectedBlog?.content ? selectedBlog.content.split(' ').filter((word: string) => word.length > 0).length : 0} words
                                   </div>
                                 </div>
 
                                 {/* Previous Admin Notes */}
                                 {selectedBlog.adminNotes && (
-                                  <div>
-                                    <h4 className="font-semibold mb-2 text-gray-700">Previous Admin Notes:</h4>
-                                    <div className="p-3 bg-yellow-50 rounded border-l-4 border-yellow-400">
+                                  <div className="space-y-3">
+                                    <h4 className="font-semibold text-gray-800 text-base">Previous Admin Notes:</h4>
+                                    <div className="p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border-l-4 border-yellow-500">
                                       <p className="text-gray-800">{selectedBlog.adminNotes}</p>
                                     </div>
                                   </div>
                                 )}
 
                                 {/* New Admin Notes */}
-                                <div>
-                                  <h4 className="font-semibold mb-2 text-gray-700">Admin Notes:</h4>
+                                <div className="space-y-3">
+                                  <h4 className="font-semibold text-gray-800 text-base">Admin Notes:</h4>
                                   <Textarea
                                     value={adminNotes}
                                     onChange={(e) => setAdminNotes(e.target.value)}
                                     placeholder="Add notes about this submission (optional)..."
                                     rows={3}
-                                    className="resize-none"
+                                    className="resize-none border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                                   />
                                 </div>
                               </div>
                             )}
 
-                            <DialogFooter className="gap-2">
-                              {selectedBlog?.status === 'pending' && (
+                            <DialogFooter className="flex-shrink-0 gap-3 pt-6 border-t-2 border-gray-200 mt-6 bg-gray-50 -mx-6 -mb-6 px-6 py-4 rounded-b-lg">
+                              <div className="flex flex-wrap gap-3 w-full justify-end">
+                                {selectedBlog?.status === 'pending' && (
                                 <>
                                   <Button
                                     onClick={() => selectedBlog && handleBlogAction(selectedBlog._id, 'approve', adminNotes)}
                                     disabled={actionLoading}
-                                    className="bg-green-600 hover:bg-green-700"
+                                    className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 shadow-lg"
                                   >
-                                    <CheckCircle className="h-4 w-4 mr-1" />
+                                    <CheckCircle className="h-4 w-4 mr-2" />
                                     Approve
                                   </Button>
                                   <Button
                                     variant="destructive"
                                     onClick={() => selectedBlog && handleBlogAction(selectedBlog._id, 'reject', adminNotes)}
                                     disabled={actionLoading}
+                                    className="font-semibold px-6 py-2 shadow-lg"
                                   >
-                                    <XCircle className="h-4 w-4 mr-1" />
+                                    <XCircle className="h-4 w-4 mr-2" />
                                     Reject
                                   </Button>
                                 </>
@@ -519,9 +515,9 @@ export default function AdminBlogsClient() {
                                 <Button
                                   onClick={() => selectedBlog && handleBlogAction(selectedBlog._id, 'publish', adminNotes)}
                                   disabled={actionLoading}
-                                  className="bg-blue-600 hover:bg-blue-700"
+                                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 shadow-lg"
                                 >
-                                  <Globe className="h-4 w-4 mr-1" />
+                                  <Globe className="h-4 w-4 mr-2" />
                                   Publish
                                 </Button>
                               )}
@@ -532,6 +528,7 @@ export default function AdminBlogsClient() {
                                     variant="outline"
                                     onClick={() => selectedBlog && handleBlogAction(selectedBlog._id, 'unpublish', adminNotes)}
                                     disabled={actionLoading}
+                                    className="font-semibold px-6 py-2 shadow-lg border-2"
                                   >
                                     Unpublish
                                   </Button>
@@ -539,8 +536,9 @@ export default function AdminBlogsClient() {
                                     variant="outline"
                                     onClick={() => selectedBlog && handleBlogAction(selectedBlog._id, 'feature', adminNotes)}
                                     disabled={actionLoading}
+                                    className="font-semibold px-6 py-2 shadow-lg border-2"
                                   >
-                                    <Star className="h-4 w-4 mr-1" />
+                                    <Star className="h-4 w-4 mr-2" />
                                     {selectedBlog.featured ? 'Unfeature' : 'Feature'}
                                   </Button>
                                 </>
@@ -550,10 +548,12 @@ export default function AdminBlogsClient() {
                                 variant="destructive"
                                 onClick={() => selectedBlog && handleDeleteBlog(selectedBlog._id)}
                                 disabled={actionLoading}
+                                className="font-semibold px-6 py-2 shadow-lg"
                               >
-                                <Trash2 className="h-4 w-4 mr-1" />
+                                <Trash2 className="h-4 w-4 mr-2" />
                                 Delete
                               </Button>
+                              </div>
                             </DialogFooter>
                           </DialogContent>
                         </Dialog>

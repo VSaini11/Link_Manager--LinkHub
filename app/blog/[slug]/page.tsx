@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Calendar, Clock, Eye, Heart, Share2, Tag, User } from 'lucide-react';
+import BlogPostStructuredData from '@/components/BlogPostStructuredData';
 
 // Fetch individual blog post
 async function getBlogPost(slug: string) {
@@ -86,6 +87,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
+      <BlogPostStructuredData post={post} />
       <div className="max-w-4xl mx-auto px-4 py-20">
         {/* Back to Blog */}
         <div className="mb-8">
@@ -131,15 +133,6 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
             </div>
           </div>
 
-          {/* Featured Image */}
-          <div className="aspect-video overflow-hidden rounded-lg mb-8">
-            <img 
-              src={post.featuredImage || '/placeholder-blog.jpg'} 
-              alt={post.title}
-              className="w-full h-full object-cover"
-            />
-          </div>
-
           {/* Social Share */}
           <div className="flex items-center gap-4 mb-8">
             <Button variant="outline" size="sm" className="flex items-center gap-2">
@@ -170,13 +163,6 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
             <div className="grid md:grid-cols-2 gap-6">
               {relatedPosts.map((relatedPost: any) => (
                 <Card key={relatedPost._id} className="overflow-hidden hover:shadow-lg transition-shadow group">
-                  <div className="aspect-video overflow-hidden">
-                    <img 
-                      src={relatedPost.featuredImage || '/placeholder-blog.jpg'} 
-                      alt={relatedPost.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
                   <CardContent className="p-6">
                     <Badge variant="outline" className="text-xs mb-3">{relatedPost.category}</Badge>
                     <h3 className="text-lg font-semibold text-gray-900 mb-3 hover:text-blue-600 transition-colors">

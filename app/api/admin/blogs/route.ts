@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import { dbConnect } from '@/lib/mongodb';
 import Blog from '@/lib/models/Blog';
+import { revalidateTag } from 'next/cache';
 
 // GET /api/admin/blogs - Get all blog submissions for admin review
 export async function GET(request: NextRequest) {
@@ -179,6 +180,16 @@ export async function PATCH(request: NextRequest) {
     }
 
     console.log(`📊 Blog update completed: Status="${updatedBlog.status}", Published=${updatedBlog.published}, Featured=${updatedBlog.featured}`);
+
+    // Revalidate blog cache when publishing/unpublishing
+    if (action === 'publish' || action === 'unpublish') {
+      try {
+        revalidateTag('blog-posts');
+        console.log('🔄 Blog cache revalidated');
+      } catch (revalidateError) {
+        console.warn('Failed to revalidate blog cache:', revalidateError);
+      }
+    }
 
     return NextResponse.json({
       success: true,

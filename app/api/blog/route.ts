@@ -17,8 +17,13 @@ export async function GET(request: NextRequest) {
     
     const skip = (page - 1) * limit;
     
-    // Build query
-    const query: any = { published: true };
+    // Build query - only show published blogs
+    const query: any = { 
+      published: true,
+      status: 'published'  // Also check status field
+    };
+    
+    console.log('🔍 Blog API Query:', { query, page, limit, category, search, featured });
     
     if (category && category !== 'All') {
       query.category = category;
@@ -46,6 +51,10 @@ export async function GET(request: NextRequest) {
         categories: ['All', 'SEO', 'Analytics', 'Marketing', 'Link Management']
       });
     }
+
+    // First, let's check all blogs in the database for debugging
+    const allBlogs = await Blog.find({}).select('title published status').lean();
+    console.log('📊 All blogs in database:', allBlogs);
     
     // Get posts with pagination
     const posts = await Blog.find(query)

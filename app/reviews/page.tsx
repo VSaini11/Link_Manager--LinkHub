@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Star, Quote, ThumbsUp, Calendar, MapPin, Building, CheckCircle } from 'lucide-react';
 import ReviewForm from '@/components/ReviewForm';
 
@@ -184,54 +185,72 @@ export default async function ReviewsPage() {
             {featuredReviews.length > 0 && (
               <section className="mb-16">
                 <h2 className="text-2xl font-bold text-white mb-8 text-center">Featured Reviews</h2>
-                <div className="grid lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
-                  {featuredReviews.map((review: any) => (
-                    <Card key={review._id} className="bg-slate-800/90 backdrop-blur-sm border border-slate-700 hover:border-purple-500 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/30 rounded-2xl">
-                      <CardContent className="p-6">
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center gap-2">
-                            <Quote className="h-8 w-8 text-purple-400" />
-                            {review.verified && (
-                              <CheckCircle className="h-4 w-4 text-green-400" />
-                            )}
-                          </div>
-                          <StarRating rating={review.rating} />
-                        </div>
-                        
-                        <h4 className="font-bold text-white mb-3 text-lg">{review.title}</h4>
-                        <blockquote className="text-slate-300 mb-6 leading-relaxed line-clamp-4">
-                          {review.content}
-                        </blockquote>
-                        
-                        <div className="border-t border-slate-700 pt-4">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h3 className="font-semibold text-white">{review.name}</h3>
-                              {review.company && (
-                                <div className="flex items-center gap-1 text-sm text-slate-400">
-                                  <Building className="h-3 w-3" />
-                                  <span>{review.company}</span>
+                <div className="relative max-w-6xl mx-auto px-12">
+                  <Carousel
+                    opts={{
+                      align: "start",
+                      loop: true,
+                    }}
+                    className="w-full"
+                  >
+                    <CarouselContent className="-ml-2 md:-ml-4">
+                      {featuredReviews.map((review: any) => (
+                        <CarouselItem key={review._id} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3">
+                          <div className="p-2 h-full">
+                            <Card className="bg-slate-800/90 backdrop-blur-sm border border-slate-700 hover:border-purple-500 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/20 rounded-2xl h-full min-h-[420px] max-h-[420px] flex flex-col">
+                              <CardContent className="p-6 flex flex-col h-full overflow-hidden">
+                                <div className="flex items-center justify-between mb-4">
+                                  <div className="flex items-center gap-2">
+                                    <Quote className="h-8 w-8 text-purple-400" />
+                                    {review.verified && (
+                                      <CheckCircle className="h-4 w-4 text-green-400" />
+                                    )}
+                                  </div>
+                                  <StarRating rating={review.rating} />
                                 </div>
-                              )}
-                            </div>
-                            <div className="flex flex-col items-end">
-                              <Badge variant="secondary" className="bg-yellow-500 text-yellow-900 mb-1">Featured</Badge>
-                              <span className="text-xs text-slate-400">
-                                {getDaysAgoText(review.createdAt)}
-                              </span>
-                            </div>
+                                
+                                <h4 className="font-bold text-white mb-3 text-lg line-clamp-2">{review.title}</h4>
+                                <div className="text-slate-300 mb-6 leading-relaxed flex-grow overflow-hidden">
+                                  <p className="line-clamp-3">
+                                    {review.content}
+                                  </p>
+                                </div>
+                                
+                                <div className="border-t border-slate-700 pt-4 mt-auto">
+                                  <div className="flex items-center justify-between">
+                                    <div>
+                                      <h3 className="font-semibold text-white">{review.name}</h3>
+                                      {review.company && (
+                                        <div className="flex items-center gap-1 text-sm text-slate-400">
+                                          <Building className="h-3 w-3" />
+                                          <span>{review.company}</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div className="flex flex-col items-end">
+                                      <Badge variant="secondary" className="bg-yellow-500 text-yellow-900 mb-1">Featured</Badge>
+                                      <span className="text-xs text-slate-400">
+                                        {getDaysAgoText(review.createdAt)}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                <div className="mt-4 pt-3 border-t border-slate-700">
+                                  <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white hover:bg-slate-700 w-full">
+                                    <ThumbsUp className="h-4 w-4 mr-2" />
+                                    Helpful ({review.helpful || 0})
+                                  </Button>
+                                </div>
+                              </CardContent>
+                            </Card>
                           </div>
-                        </div>
-                        
-                        <div className="mt-4 pt-3 border-t border-slate-700">
-                          <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white hover:bg-slate-700 w-full">
-                            <ThumbsUp className="h-4 w-4 mr-2" />
-                            Helpful ({review.helpful || 0})
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                    <CarouselPrevious className="bg-slate-800 border-slate-700 text-white hover:bg-slate-700 hover:text-white -left-4" />
+                    <CarouselNext className="bg-slate-800 border-slate-700 text-white hover:bg-slate-700 hover:text-white -right-4" />
+                  </Carousel>
                 </div>
               </section>
             )}
@@ -241,56 +260,74 @@ export default async function ReviewsPage() {
               <h2 className="text-2xl font-bold text-white mb-8 text-center">
                 {featuredReviews.length > 0 ? 'More Reviews' : 'All Reviews'}
               </h2>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {nonFeaturedReviews.map((review: any) => (
-                  <Card key={review._id} className="bg-slate-800/90 backdrop-blur-sm border border-slate-700 hover:border-purple-500 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/30 rounded-2xl">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2">
-                          <Quote className="h-8 w-8 text-purple-400" />
-                          {review.verified && (
-                            <CheckCircle className="h-4 w-4 text-green-400" />
-                          )}
-                        </div>
-                        <StarRating rating={review.rating} />
-                      </div>
-                      
-                      <h4 className="font-bold text-white mb-3 text-lg">{review.title}</h4>
-                      <blockquote className="text-slate-300 mb-6 leading-relaxed line-clamp-4">
-                        {review.content}
-                      </blockquote>
-                      
-                      <div className="border-t border-slate-700 pt-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="font-semibold text-white">{review.name}</h3>
-                            {review.company && (
-                              <div className="flex items-center gap-1 text-sm text-slate-400">
-                                <Building className="h-3 w-3" />
-                                <span>{review.company}</span>
+              <div className="relative max-w-6xl mx-auto px-12">
+                <Carousel
+                  opts={{
+                    align: "start",
+                    loop: true,
+                  }}
+                  className="w-full"
+                >
+                  <CarouselContent className="-ml-2 md:-ml-4">
+                    {nonFeaturedReviews.map((review: any) => (
+                      <CarouselItem key={review._id} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3">
+                        <div className="p-2 h-full">
+                          <Card className="bg-slate-800/90 backdrop-blur-sm border border-slate-700 hover:border-purple-500 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/20 rounded-2xl h-full min-h-[420px] max-h-[420px] flex flex-col">
+                            <CardContent className="p-6 flex flex-col h-full overflow-hidden">
+                              <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-2">
+                                  <Quote className="h-8 w-8 text-purple-400" />
+                                  {review.verified && (
+                                    <CheckCircle className="h-4 w-4 text-green-400" />
+                                  )}
+                                </div>
+                                <StarRating rating={review.rating} />
                               </div>
-                            )}
-                          </div>
-                          <div className="flex flex-col items-end">
-                            {review.featured && (
-                              <Badge variant="secondary" className="bg-yellow-500 text-yellow-900 mb-1">Featured</Badge>
-                            )}
-                            <span className="text-xs text-slate-400">
-                              {getDaysAgoText(review.createdAt)}
-                            </span>
-                          </div>
+                              
+                              <h4 className="font-bold text-white mb-3 text-lg line-clamp-2">{review.title}</h4>
+                              <div className="text-slate-300 mb-6 leading-relaxed flex-grow overflow-hidden">
+                                <p className="line-clamp-3">
+                                  {review.content}
+                                </p>
+                              </div>
+                              
+                              <div className="border-t border-slate-700 pt-4 mt-auto">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <h3 className="font-semibold text-white">{review.name}</h3>
+                                    {review.company && (
+                                      <div className="flex items-center gap-1 text-sm text-slate-400">
+                                        <Building className="h-3 w-3" />
+                                        <span>{review.company}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="flex flex-col items-end">
+                                    {review.featured && (
+                                      <Badge variant="secondary" className="bg-yellow-500 text-yellow-900 mb-1">Featured</Badge>
+                                    )}
+                                    <span className="text-xs text-slate-400">
+                                      {getDaysAgoText(review.createdAt)}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <div className="mt-4 pt-3 border-t border-slate-700">
+                                <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white hover:bg-slate-700 w-full">
+                                  <ThumbsUp className="h-4 w-4 mr-2" />
+                                  Helpful ({review.helpful || 0})
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
                         </div>
-                      </div>
-                      
-                      <div className="mt-4 pt-3 border-t border-slate-700">
-                        <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white hover:bg-slate-700 w-full">
-                          <ThumbsUp className="h-4 w-4 mr-2" />
-                          Helpful ({review.helpful || 0})
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious className="bg-slate-800 border-slate-700 text-white hover:bg-slate-700 hover:text-white -left-4" />
+                  <CarouselNext className="bg-slate-800 border-slate-700 text-white hover:bg-slate-700 hover:text-white -right-4" />
+                </Carousel>
               </div>
             </section>
           </>

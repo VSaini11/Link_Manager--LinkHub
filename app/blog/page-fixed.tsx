@@ -35,10 +35,7 @@ async function getBlogData(): Promise<BlogData> {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://golinkhub.vercel.app';
     const response = await fetch(`${baseUrl}/api/blog`, {
-      next: { 
-        revalidate: 300, // Revalidate every 5 minutes for faster updates
-        tags: ['blog-posts'] // Add cache tag for revalidation
-      }
+      next: { revalidate: 3600 } // Revalidate every hour
     });
     
     if (!response.ok) {
