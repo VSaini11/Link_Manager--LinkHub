@@ -40,10 +40,19 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://linkhub.vercel.app'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://golinkhub.vercel.app'),
   alternates: {
     canonical: '/',
   },
+  icons: {
+    icon: [
+      { url: '/icon', sizes: '32x32' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+    shortcut: '/icon',
+    apple: '/favicon.svg',
+  },
+  manifest: '/manifest.json',
   openGraph: {
     title: "LinkHub - Advanced URL Shortener with Analytics",
     description: "Create shortened URLs with advanced analytics, QR codes, and real-time tracking. Free URL shortener with geographic data and traffic insights.",
@@ -114,9 +123,9 @@ export default function RootLayout({
         <link rel="preconnect" href="https://ipinfo.io" />
         
         {/* Favicon and app icons */}
-        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/icon" sizes="32x32" />
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" href="/favicon.svg" />
         <link rel="manifest" href="/manifest.json" />
         
         {/* DNS prefetch for performance */}
