@@ -410,36 +410,36 @@ export default function DashboardClient({ user }: DashboardClientProps = {}) {
       {/* Main Content */}
       <div className="lg:ml-64 flex flex-col min-h-screen">
         {/* Header */}
-        <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-8 py-4">
-          <div className="flex items-center justify-between max-w-7xl mx-auto">
-            <div className="flex items-center space-x-3 sm:space-x-4">
+        <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-3 sm:px-8 py-3.5 sm:py-4">
+          <div className="flex items-center justify-between max-w-7xl mx-auto gap-2">
+            <div className="flex items-center space-x-2.5 sm:space-x-4 min-w-0">
               <button 
                 onClick={() => setSidebarOpen(true)} 
-                className="lg:hidden text-slate-600 hover:text-slate-900 p-1"
+                className="lg:hidden text-slate-600 hover:text-slate-900 p-1 rounded-lg hover:bg-slate-100 flex-shrink-0"
               >
-                <Menu className="h-6 w-6" />
+                <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
               </button>
-              <div>
-                <h1 className="text-xl sm:text-2xl font-heading font-extrabold text-slate-900">
-                  {currentView === "dashboard" ? "Links & Revenue Overview" : "AI Insights, Revenue & Fraud Analytics"}
+              <div className="min-w-0">
+                <h1 className="text-base sm:text-2xl font-heading font-extrabold text-slate-900 truncate">
+                  {currentView === "dashboard" ? "Links & Revenue" : "Analytics & Fraud"}
                 </h1>
               </div>
             </div>
 
             {currentView === "dashboard" && (
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-1.5 sm:gap-2.5 flex-shrink-0">
                 <button
                   onClick={handleScanLinkHealth}
                   disabled={isCheckingHealth}
                   title="Scan all destination URLs for 404 or dead pages"
-                  className="inline-flex items-center space-x-1.5 px-3.5 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs sm:text-sm font-semibold hover:bg-slate-50 transition-all shadow-sm"
+                  className="inline-flex items-center space-x-1.5 p-2 sm:px-3.5 sm:py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs sm:text-sm font-semibold hover:bg-slate-50 transition-all shadow-sm"
                 >
                   <RefreshCw className={`h-4 w-4 text-emerald-600 ${isCheckingHealth ? "animate-spin" : ""}`} />
-                  <span className="hidden sm:inline">{isCheckingHealth ? "Scanning..." : "Scan Link Health"}</span>
+                  <span className="hidden md:inline">{isCheckingHealth ? "Scanning..." : "Scan Link Health"}</span>
                 </button>
                 <button
                   onClick={() => setShowAddForm(true)}
-                  className="inline-flex items-center space-x-2 px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-indigo-700 active:scale-[0.98] transition-all shadow-sm shadow-indigo-600/20"
+                  className="inline-flex items-center space-x-1.5 sm:space-x-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-indigo-600 text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-indigo-700 active:scale-[0.98] transition-all shadow-sm shadow-indigo-600/20"
                 >
                   <Plus className="h-4 w-4" />
                   <span>New Link</span>
@@ -450,54 +450,61 @@ export default function DashboardClient({ user }: DashboardClientProps = {}) {
         </header>
 
         {/* Content Body */}
-        <main className="flex-1 p-4 sm:p-8 max-w-7xl mx-auto w-full">
+        <main className="flex-1 p-3.5 sm:p-8 max-w-7xl mx-auto w-full">
           {currentView === "dashboard" ? (
             <div>
               {/* Top 4 Business KPI Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-8">
-                <div className="glass-card rounded-2xl p-5 flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Active Links</p>
-                    <p className="text-2xl sm:text-3xl font-heading font-extrabold text-slate-900">{links.length}</p>
-                    <p className="text-[11px] text-slate-400 mt-1">Dynamic QR & routing ready</p>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 mb-6 sm:mb-8">
+                <div className="glass-card rounded-2xl p-4 sm:p-5 flex items-center justify-between">
+                  <div className="min-w-0">
+                    <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-slate-400 mb-0.5 sm:mb-1 truncate">Active Links</p>
+                    <p className="text-xl sm:text-3xl font-heading font-extrabold text-slate-900">{links.length}</p>
+                    <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 truncate hidden sm:block">Dynamic QR ready</p>
                   </div>
-                  <div className="w-11 h-11 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
-                    <Link2 className="h-5 w-5" />
-                  </div>
-                </div>
-
-                <div className="glass-card rounded-2xl p-5 flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Verified Clicks</p>
-                    <p className="text-2xl sm:text-3xl font-heading font-extrabold text-slate-900">{totalClicks.toLocaleString()}</p>
-                    <p className="text-[11px] text-emerald-600 font-medium mt-1">Bot-filtered human traffic</p>
-                  </div>
-                  <div className="w-11 h-11 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
-                    <BarChart3 className="h-5 w-5" />
+                  <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 flex-shrink-0">
+                    <Link2 className="h-4 w-4 sm:h-5 sm:w-5" />
                   </div>
                 </div>
 
-                <div className="glass-card rounded-2xl p-5 flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Attributed Revenue</p>
-                    <p className="text-2xl sm:text-3xl font-heading font-extrabold text-emerald-700">
+                <div className="glass-card rounded-2xl p-4 sm:p-5 flex items-center justify-between">
+                  <div className="min-w-0">
+                    <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-slate-400 mb-0.5 sm:mb-1 truncate">Verified Clicks</p>
+                    <p className="text-xl sm:text-3xl font-heading font-extrabold text-slate-900">{totalClicks.toLocaleString()}</p>
+                    <p className="text-[10px] sm:text-[11px] text-emerald-600 font-medium mt-0.5 truncate hidden sm:block">Human traffic</p>
+                  </div>
+                  <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 flex-shrink-0">
+                    <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5" />
+                  </div>
+                </div>
+
+                <div className="glass-card rounded-2xl p-4 sm:p-5 flex items-center justify-between">
+                  <div className="min-w-0">
+                    <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-slate-400 mb-0.5 sm:mb-1 truncate">Revenue</p>
+                    <p className="text-xl sm:text-3xl font-heading font-extrabold text-emerald-700 truncate">
                       ₹{totalRevenue.toLocaleString("en-IN")}
                     </p>
-                    <p className="text-[11px] text-slate-500 mt-1">{totalConversions} sales tracked</p>
+                    <p className="text-[10px] sm:text-[11px] text-slate-500 mt-0.5 truncate hidden sm:block">{totalConversions} sales</p>
                   </div>
-                  <div className="w-11 h-11 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
-                    <IndianRupee className="h-5 w-5" />
+                  <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700 flex-shrink-0">
+                    <IndianRupee className="h-4 w-4 sm:h-5 sm:w-5" />
                   </div>
                 </div>
 
-                <div className="glass-card rounded-2xl p-5 flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Link Health Monitor</p>
-                    <p className="text-2xl sm:text-3xl font-heading font-extrabold text-slate-900">
+                <div className="glass-card rounded-2xl p-4 sm:p-5 flex items-center justify-between">
+                  <div className="min-w-0">
+                    <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-slate-400 mb-0.5 sm:mb-1 truncate">Link Health</p>
+                    <p className="text-xl sm:text-3xl font-heading font-extrabold text-slate-900 truncate">
                       {brokenLinksCount === 0 ? "100% OK" : `${brokenLinksCount} Dead`}
                     </p>
-                    <p className="text-[11px] text-slate-500 mt-1">
-                      {brokenLinksCount === 0 ? "Zero 404 ad-spend waste" : "Auto-routing to fallback URL"}
+                    <p className="text-[10px] sm:text-[11px] text-slate-500 mt-0.5 truncate hidden sm:block">
+                      {brokenLinksCount === 0 ? "Zero dead links" : "Fallback active"}
+                    </p>
+                  </div>
+                  <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-xl bg-violet-50 border border-violet-100 flex items-center justify-center text-violet-600 flex-shrink-0">
+                    <ShieldCheck className="h-4 w-4 sm:h-5 sm:w-5" />
+                  </div>
+                </div>
+              </div>
                     </p>
                   </div>
                   <div className={`w-11 h-11 rounded-xl border flex items-center justify-center ${

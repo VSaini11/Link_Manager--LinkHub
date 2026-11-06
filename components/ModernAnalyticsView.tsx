@@ -343,8 +343,8 @@ export default function ModernAnalyticsView({ linkId: initialLinkId }: { linkId?
   return (
     <div className="space-y-6 text-sm">
       {/* Top Filter & Control Bar */}
-      <div className="glass-card rounded-2xl p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+      <div className="glass-card rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full md:w-auto">
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500">
             <Filter className="w-4 h-4 text-indigo-600" />
             <span>Filter Link:</span>
@@ -352,7 +352,7 @@ export default function ModernAnalyticsView({ linkId: initialLinkId }: { linkId?
           <select
             value={selectedLinkId}
             onChange={(e) => setSelectedLinkId(e.target.value)}
-            className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 min-w-[240px]"
+            className="w-full sm:w-auto px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 min-w-0 sm:min-w-[240px]"
           >
             <option value="all">All Links ({links.length})</option>
             {links.map((link) => (
@@ -363,9 +363,9 @@ export default function ModernAnalyticsView({ linkId: initialLinkId }: { linkId?
           </select>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between sm:justify-end gap-3">
+        <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2.5 w-full md:w-auto">
           {/* Time Period Selector */}
-          <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/80">
+          <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/80 w-full sm:w-auto justify-between sm:justify-start">
             {[
               { id: "today", label: "Today" },
               { id: "7d", label: "Last 7D" },
@@ -375,7 +375,7 @@ export default function ModernAnalyticsView({ linkId: initialLinkId }: { linkId?
               <button
                 key={tab.id}
                 onClick={() => setSelectedPeriod(tab.id as any)}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                className={`flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-center ${
                   selectedPeriod === tab.id
                     ? "bg-white text-indigo-600 shadow-sm"
                     : "text-slate-600 hover:text-slate-900"
@@ -386,58 +386,60 @@ export default function ModernAnalyticsView({ linkId: initialLinkId }: { linkId?
             ))}
           </div>
 
-          {/* Download Ad-Fraud Report Button (#2) */}
-          <button
-            onClick={handleDownloadFraudReport}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold transition-all shadow-xs"
-          >
-            <Download className="w-4 h-4" />
-            <span>Dispute Report (CSV)</span>
-          </button>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            {/* Download Ad-Fraud Report Button (#2) */}
+            <button
+              onClick={handleDownloadFraudReport}
+              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold transition-all shadow-xs"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>CSV Report</span>
+            </button>
 
-          {/* Refresh Button */}
-          <button
-            onClick={() => fetchAnalyticsData(true)}
-            disabled={isRefreshing}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition-all shadow-xs"
-          >
-            <RefreshCw className={`w-4 h-4 text-indigo-600 ${isRefreshing ? "animate-spin" : ""}`} />
-            <span>{isRefreshing ? "Updating..." : "Refresh"}</span>
-          </button>
+            {/* Refresh Button */}
+            <button
+              onClick={() => fetchAnalyticsData(true)}
+              disabled={isRefreshing}
+              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition-all shadow-xs"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 text-indigo-600 ${isRefreshing ? "animate-spin" : ""}`} />
+              <span>{isRefreshing ? "Updating..." : "Refresh"}</span>
+            </button>
+          </div>
         </div>
       </div>
 
       {/* #3 AI Insights in Plain Language + WhatsApp & Email Digest */}
-      <div className="glass-card rounded-2xl p-6 border-l-4 border-l-indigo-600">
+      <div className="glass-card rounded-2xl p-4 sm:p-6 border-l-4 border-l-indigo-600">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100">
-              <Sparkles className="w-5 h-5" />
+            <div className="p-2 sm:p-2.5 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex-shrink-0">
+              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div>
               <h3 className="text-base sm:text-lg font-heading font-bold text-slate-900">
                 AI Business Insights in Plain Language
               </h3>
               <p className="text-xs text-slate-500">
-                Actionable revenue, peak timing, and ad-fraud takeaways—ready to send to WhatsApp or Email
+                Actionable revenue, peak timing, and ad-fraud takeaways
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <button
               onClick={handleShareWhatsAppDigest}
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors shadow-sm"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors shadow-sm"
             >
-              <MessageCircle className="w-4 h-4" />
-              <span>WhatsApp Digest</span>
+              <MessageCircle className="w-3.5 h-3.5" />
+              <span>WhatsApp</span>
             </button>
             <button
               onClick={handleShareEmailDigest}
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-colors shadow-sm"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-colors shadow-sm"
             >
-              <Mail className="w-4 h-4" />
-              <span>Email Digest</span>
+              <Mail className="w-3.5 h-3.5" />
+              <span>Email</span>
             </button>
           </div>
         </div>
@@ -455,18 +457,18 @@ export default function ModernAnalyticsView({ linkId: initialLinkId }: { linkId?
       </div>
 
       {/* Top 4 High-Impact Business KPI Cards (#1 Revenue + #2 Click Quality Score + Human Clicks + Unique) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         {/* #1 Click-to-Revenue Attribution */}
-        <div className="glass-card rounded-2xl p-6 card-hover">
+        <div className="glass-card rounded-2xl p-4 sm:p-6 card-hover">
           <div className="flex items-start justify-between mb-2">
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Attributed Revenue</p>
-              <h3 className="text-3xl sm:text-4xl font-heading font-extrabold text-emerald-700 mt-1">
+              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-extrabold text-emerald-700 mt-1">
                 ₹{(summary.totalRevenue || 0).toLocaleString("en-IN")}
               </h3>
             </div>
-            <div className="w-12 h-12 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
-              <IndianRupee className="w-6 h-6" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
+              <IndianRupee className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
           </div>
           <p className="text-xs text-slate-500">
@@ -475,16 +477,16 @@ export default function ModernAnalyticsView({ linkId: initialLinkId }: { linkId?
         </div>
 
         {/* #2 Click Quality Score (Ad-Fraud Detection) */}
-        <div className="glass-card rounded-2xl p-6 card-hover">
+        <div className="glass-card rounded-2xl p-4 sm:p-6 card-hover">
           <div className="flex items-start justify-between mb-2">
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Click Quality Score</p>
-              <h3 className="text-3xl sm:text-4xl font-heading font-extrabold text-slate-900 mt-1">
+              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-extrabold text-slate-900 mt-1">
                 {summary.clickQualityScore ?? 100}%
               </h3>
             </div>
-            <div className="w-12 h-12 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
-              <ShieldCheck className="w-6 h-6" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
+              <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
           </div>
           <p className="text-xs text-slate-500">
@@ -494,16 +496,16 @@ export default function ModernAnalyticsView({ linkId: initialLinkId }: { linkId?
         </div>
 
         {/* Verified Human Clicks */}
-        <div className="glass-card rounded-2xl p-6 card-hover">
+        <div className="glass-card rounded-2xl p-4 sm:p-6 card-hover">
           <div className="flex items-start justify-between mb-2">
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Verified Human Clicks</p>
-              <h3 className="text-3xl sm:text-4xl font-heading font-extrabold text-slate-900 mt-1">
+              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-extrabold text-slate-900 mt-1">
                 {summary.totalClicks.toLocaleString()}
               </h3>
             </div>
-            <div className="w-12 h-12 rounded-xl bg-violet-50 border border-violet-100 flex items-center justify-center text-violet-600">
-              <MousePointer className="w-6 h-6" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-violet-50 border border-violet-100 flex items-center justify-center text-violet-600">
+              <MousePointer className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
           </div>
           <p className="text-xs text-slate-500">
@@ -512,16 +514,16 @@ export default function ModernAnalyticsView({ linkId: initialLinkId }: { linkId?
         </div>
 
         {/* True Unique Visitors & Leads */}
-        <div className="glass-card rounded-2xl p-6 card-hover">
+        <div className="glass-card rounded-2xl p-4 sm:p-6 card-hover">
           <div className="flex items-start justify-between mb-2">
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Unique Visitors & Leads</p>
-              <h3 className="text-3xl sm:text-4xl font-heading font-extrabold text-slate-900 mt-1">
+              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-extrabold text-slate-900 mt-1">
                 {summary.uniqueClicks.toLocaleString()}
               </h3>
             </div>
-            <div className="w-12 h-12 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600">
-              <Users className="w-6 h-6" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600">
+              <Users className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
           </div>
           <p className="text-xs text-slate-500">
@@ -531,53 +533,53 @@ export default function ModernAnalyticsView({ linkId: initialLinkId }: { linkId?
       </div>
 
       {/* Modern Compact Section Tabs Navigation (No Endless Scrolling) */}
-      <div className="flex items-center justify-start gap-2 bg-slate-200/80 p-1.5 rounded-2xl border border-slate-200 overflow-x-auto">
+      <div className="flex items-center justify-start gap-1.5 bg-slate-200/80 p-1.5 rounded-2xl border border-slate-200 overflow-x-auto max-w-full">
         <button
           onClick={() => setAnalyticsViewTab("overview")}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap ${
+          className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap flex-shrink-0 ${
             analyticsViewTab === "overview"
               ? "bg-white text-indigo-700 shadow-sm"
               : "text-slate-600 hover:text-slate-900"
           }`}
         >
-          <BarChart2 className="w-4 h-4 text-indigo-600" />
-          <span>Timeline & Traffic Sources</span>
+          <BarChart2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-600" />
+          <span>Timeline & Traffic</span>
         </button>
 
         <button
           onClick={() => setAnalyticsViewTab("audience")}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap ${
+          className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap flex-shrink-0 ${
             analyticsViewTab === "audience"
               ? "bg-white text-indigo-700 shadow-sm"
               : "text-slate-600 hover:text-slate-900"
           }`}
         >
-          <Globe className="w-4 h-4 text-emerald-600" />
-          <span>Geographic, Devices & Browsers</span>
+          <Globe className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
+          <span>Geo & Devices</span>
         </button>
 
         <button
           onClick={() => setAnalyticsViewTab("business")}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap ${
+          className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap flex-shrink-0 ${
             analyticsViewTab === "business"
               ? "bg-white text-indigo-700 shadow-sm"
               : "text-slate-600 hover:text-slate-900"
           }`}
         >
-          <Award className="w-4 h-4 text-violet-600" />
-          <span>Affiliates, QR & Leads ({affiliateLeaderboard.length + qrLocations.length + leads.length})</span>
+          <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-violet-600" />
+          <span>Affiliates, QR & Leads</span>
         </button>
 
         <button
           onClick={() => setAnalyticsViewTab("logs")}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap ${
+          className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap flex-shrink-0 ${
             analyticsViewTab === "logs"
               ? "bg-white text-indigo-700 shadow-sm"
               : "text-slate-600 hover:text-slate-900"
           }`}
         >
-          <Clock className="w-4 h-4 text-amber-600" />
-          <span>Live Click Activity Stream ({recentClicks.length})</span>
+          <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-600" />
+          <span>Live Logs ({recentClicks.length})</span>
         </button>
       </div>
 
