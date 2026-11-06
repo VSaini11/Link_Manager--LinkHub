@@ -1,12 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import mongoose from 'mongoose';
 import { dbConnect } from '@/lib/mongodb';
 import Blog from '@/lib/models/Blog';
 import { revalidateTag } from 'next/cache';
 
+async function isAdminAuthenticated(): Promise<boolean> {
+  const cookieStore = await cookies();
+  return cookieStore.get('admin-auth')?.value === 'authenticated';
+}
+
 // GET /api/admin/blogs - Get all blog submissions for admin review
 export async function GET(request: NextRequest) {
   try {
+    if (!(await isAdminAuthenticated())) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     await dbConnect();
     
     if (!mongoose.connection.readyState) {
@@ -17,8 +26,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status') || 'all';
     const search = searchParams.get('search') || '';
 
-    // Build query
-    let query: any = {};
+    const query: any = {};
     
     if (status !== 'all') {
       query.status = status;
@@ -34,9 +42,8 @@ export async function GET(request: NextRequest) {
 
     const blogs = await Blog.find(query)
       .sort({ createdAt: -1 })
-      .lean(); // Include content for admin review
+      .lean();
 
-    // Get counts for different statuses
     const counts = await Blog.aggregate([
       {
         $group: {
@@ -61,13 +68,10 @@ export async function GET(request: NextRequest) {
       statusCounts.total += item.count;
     });
 
-    console.log(`Admin blogs query: status=${status}, search="${search}", found=${blogs.length} blogs`);
-
     return NextResponse.json({
       blogs,
       counts: statusCounts
     });
-
   } catch (error) {
     console.error('Admin blogs fetch error:', error);
     return NextResponse.json(
@@ -80,6 +84,9 @@ export async function GET(request: NextRequest) {
 // PATCH /api/admin/blogs - Update blog submission status
 export async function PATCH(request: NextRequest) {
   try {
+    if (!(await isAdminAuthenticated())) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     await dbConnect();
     
     if (!mongoose.connection.readyState) {
@@ -117,7 +124,6 @@ export async function PATCH(request: NextRequest) {
           status: 'approved',
           approvedAt: new Date()
         };
-        console.log(`✅ Admin approved blog: "${blog.title}" (ID: ${blogId})`);
         break;
 
       case 'reject':
@@ -128,7 +134,6 @@ export async function PATCH(request: NextRequest) {
           status: 'rejected',
           rejectedAt: new Date()
         };
-        console.log(`❌ Admin rejected blog: "${blog.title}" (ID: ${blogId})`);
         break;
 
       case 'publish':
@@ -139,7 +144,6 @@ export async function PATCH(request: NextRequest) {
           status: 'published',
           publishedAt: new Date()
         };
-        console.log(`🌐 Admin published blog: "${blog.title}" (ID: ${blogId})`);
         break;
 
       case 'unpublish':
@@ -148,7 +152,6 @@ export async function PATCH(request: NextRequest) {
           published: false,
           status: 'approved'
         };
-        console.log(`📝 Admin unpublished blog: "${blog.title}" (ID: ${blogId})`);
         break;
 
       case 'feature':
@@ -156,7 +159,6 @@ export async function PATCH(request: NextRequest) {
           ...updateData,
           featured: !blog.featured
         };
-        console.log(`⭐ Admin ${blog.featured ? 'unfeatured' : 'featured'} blog: "${blog.title}" (ID: ${blogId})`);
         break;
 
       default:
@@ -179,13 +181,9 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    console.log(`📊 Blog update completed: Status="${updatedBlog.status}", Published=${updatedBlog.published}, Featured=${updatedBlog.featured}`);
-
-    // Revalidate blog cache when publishing/unpublishing
     if (action === 'publish' || action === 'unpublish') {
       try {
         revalidateTag('blog-posts');
-        console.log('🔄 Blog cache revalidated');
       } catch (revalidateError) {
         console.warn('Failed to revalidate blog cache:', revalidateError);
       }
@@ -196,7 +194,6 @@ export async function PATCH(request: NextRequest) {
       message: `Blog post ${action}ed successfully`,
       blog: updatedBlog
     });
-
   } catch (error) {
     console.error('Blog update error:', error);
     return NextResponse.json(
@@ -209,6 +206,9 @@ export async function PATCH(request: NextRequest) {
 // DELETE /api/admin/blogs - Delete a blog submission
 export async function DELETE(request: NextRequest) {
   try {
+    if (!(await isAdminAuthenticated())) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     await dbConnect();
     
     if (!mongoose.connection.readyState) {
@@ -235,13 +235,10 @@ export async function DELETE(request: NextRequest) {
 
     await Blog.findByIdAndDelete(blogId);
 
-    console.log(`Admin deleted blog: ${blog.title}`);
-
     return NextResponse.json({
       success: true,
       message: 'Blog post deleted successfully'
     });
-
   } catch (error) {
     console.error('Blog deletion error:', error);
     return NextResponse.json(

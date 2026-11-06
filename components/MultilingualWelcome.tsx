@@ -63,12 +63,12 @@ export default function MultilingualWelcome({ onComplete }: MultilingualWelcomeP
       <div className="absolute top-8 right-8 z-10">
         <Button
           onClick={handleSkip}
-          variant="ghost"
+          variant="outline"
           size="sm"
-          className="text-purple-300 hover:text-white hover:bg-purple-900/50 transition-all duration-300 backdrop-blur-sm border border-purple-500/30 hover:border-purple-400"
+          className="bg-white/80 text-slate-700 hover:text-slate-900 hover:bg-white transition-all duration-300 backdrop-blur-md border border-slate-200/80 shadow-sm rounded-full px-4 py-1.5 font-medium text-xs tracking-wide"
         >
-          Skip
-          <ChevronRight className="w-4 h-4 ml-1" />
+          Skip Intro
+          <ChevronRight className="w-3.5 h-3.5 ml-1 text-slate-500" />
         </Button>
       </div>
 
@@ -76,16 +76,16 @@ export default function MultilingualWelcome({ onComplete }: MultilingualWelcomeP
         className={`transition-all duration-500 transform ${
           isVisible 
             ? 'opacity-100 scale-100 translate-y-0' 
-            : 'opacity-0 scale-110 -translate-y-4'
+            : 'opacity-0 scale-105 -translate-y-3'
         }`}
       >
-        <h1 className="text-4xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold text-white mb-3 leading-tight text-center">
-          <span className="bg-gradient-to-r from-purple-400 via-blue-400 to-purple-400 bg-clip-text text-transparent animate-pulse">
+        <h1 className="text-4xl sm:text-6xl lg:text-7xl xl:text-8xl font-heading font-extrabold tracking-tight mb-3 leading-tight text-center">
+          <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-indigo-600 bg-clip-text text-transparent">
             {welcomeTexts[currentIndex].text}
           </span>
         </h1>
-        <p className="text-lg sm:text-xl text-purple-300 font-medium text-center">
-          Welcome in {welcomeTexts[currentIndex].language}
+        <p className="text-base sm:text-lg text-slate-500 font-medium text-center tracking-wide">
+          Welcome in <span className="text-indigo-600 font-semibold">{welcomeTexts[currentIndex].language}</span>
         </p>
       </div>
       
@@ -94,25 +94,25 @@ export default function MultilingualWelcome({ onComplete }: MultilingualWelcomeP
         {welcomeTexts.map((_, index) => (
           <div
             key={index}
-            className={`w-3 h-3 rounded-full transition-all duration-500 ${
+            className={`w-2.5 h-2.5 rounded-full transition-all duration-500 ${
               index <= currentIndex 
-                ? 'bg-gradient-to-r from-purple-400 to-blue-400 scale-110' 
-                : 'bg-purple-900/50 scale-75'
+                ? 'bg-gradient-to-r from-indigo-600 to-violet-600 scale-110 shadow-sm' 
+                : 'bg-slate-200 scale-90'
             }`}
           />
         ))}
       </div>
       
       {/* Skip hint text */}
-      <div className="absolute bottom-6 text-xs text-purple-400/70 animate-pulse">
-        Click Skip to go directly to the main content
+      <div className="absolute bottom-6 text-xs text-slate-400 font-medium">
+        Click Skip to jump directly to LinkHub
       </div>
       
-      {/* Animated background elements */}
+      {/* Animated gentle light background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-purple-500/10 rounded-full blur-xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-40 h-40 bg-blue-500/10 rounded-full blur-xl animate-pulse delay-700"></div>
-        <div className="absolute top-1/2 right-1/3 w-24 h-24 bg-purple-400/10 rounded-full blur-xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/4 left-1/4 w-48 h-48 bg-indigo-200/30 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-56 h-56 bg-violet-200/30 rounded-full blur-3xl animate-pulse delay-700"></div>
+        <div className="absolute top-1/2 right-1/3 w-36 h-36 bg-blue-200/30 rounded-full blur-3xl animate-pulse delay-1000"></div>
       </div>
     </div>
   );

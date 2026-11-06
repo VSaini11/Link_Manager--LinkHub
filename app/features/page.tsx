@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { Link2, BarChart3, QrCode, Shield, Zap, Users, Globe, Smartphone, TrendingUp } from "lucide-react"
+import { Link2, BarChart3, QrCode, Shield, Zap, Users, Globe, Smartphone, TrendingUp, Check, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import Navigation from "@/components/Navigation"
 
@@ -81,35 +81,43 @@ export default function FeaturesPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-black to-slate-900">
+    <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-indigo-100 selection:text-indigo-900 flex flex-col">
       {/* Navigation */}
       <Navigation />
 
       {/* Header */}
-      <div className="text-center px-6 py-16">
-        <h1 className="text-5xl lg:text-7xl font-bold text-white mb-6">
-          Powerful Features for
-          <span className="block gradient-text">Modern Link Management</span>
+      <div className="text-center px-6 py-16 sm:py-20 max-w-4xl mx-auto">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs sm:text-sm font-semibold mb-5 shadow-sm">
+          Platform Capabilities
+        </div>
+        <h1 className="text-4xl sm:text-6xl font-heading font-extrabold text-slate-900 mb-6 tracking-tight">
+          Powerful Features for{" "}
+          <span className="gradient-text">Modern Link Management</span>
         </h1>
-        <p className="text-xl text-purple-200 mb-12 max-w-3xl mx-auto">
-          Everything you need to create, track, and optimize your shortened URLs with advanced analytics and insights.
+        <p className="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
+          Everything you need to create, track, and optimize your shortened URLs with clean, legible analytics.
         </p>
       </div>
 
       {/* Features Grid */}
-      <div className="max-w-7xl mx-auto px-6 pb-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+      <div className="max-w-7xl mx-auto px-6 pb-20 w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {features.map((feature, index) => (
-            <div key={index} className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:border-purple-400/30 transition-all duration-300">
-              <div className="flex items-center mb-4">
-                <feature.icon className="h-8 w-8 text-purple-400 mr-3" />
-                <h3 className="text-xl font-semibold text-white">{feature.title}</h3>
+            <div 
+              key={index} 
+              className="glass-card rounded-2xl p-6 card-hover flex flex-col justify-between"
+            >
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 mb-5">
+                  <feature.icon className="h-6 w-6" />
+                </div>
+                <h3 className="text-lg font-heading font-bold text-slate-900 mb-2">{feature.title}</h3>
+                <p className="text-slate-600 text-sm leading-relaxed mb-5">{feature.description}</p>
               </div>
-              <p className="text-gray-300 mb-4">{feature.description}</p>
-              <ul className="space-y-2">
+              <ul className="space-y-2 pt-4 border-t border-slate-100">
                 {feature.benefits.map((benefit, idx) => (
-                  <li key={idx} className="flex items-center text-sm text-gray-400">
-                    <Zap className="h-4 w-4 text-green-400 mr-2 flex-shrink-0" />
+                  <li key={idx} className="flex items-center text-xs font-medium text-slate-500">
+                    <Check className="h-3.5 w-3.5 text-emerald-500 mr-2 flex-shrink-0" />
                     {benefit}
                   </li>
                 ))}
@@ -120,16 +128,17 @@ export default function FeaturesPage() {
       </div>
 
       {/* CTA Section */}
-      <div className="text-center px-6 py-16 border-t border-white/10">
-        <h2 className="text-4xl font-bold text-white mb-4">Ready to Get Started?</h2>
-        <p className="text-purple-200 mb-8 max-w-2xl mx-auto">
-          Join thousands of users who trust LinkHub for their link management needs.
+      <div className="text-center px-6 py-16 border-t border-slate-200 bg-white mt-auto">
+        <h2 className="text-3xl font-heading font-bold text-slate-900 mb-3 tracking-tight">Ready to Get Started?</h2>
+        <p className="text-slate-600 mb-8 max-w-xl mx-auto text-sm sm:text-base">
+          Join thousands of users who trust LinkHub for their link management needs. Free forever.
         </p>
         <Link
           href="/signup"
-          className="inline-block px-8 py-4 bg-white text-purple-900 rounded-xl font-semibold text-lg hover:bg-purple-50 transition-all duration-300 shadow-lg"
+          className="inline-flex items-center gap-2 px-8 py-3.5 bg-indigo-600 text-white rounded-xl font-semibold text-base hover:bg-indigo-700 active:scale-[0.98] transition-all shadow-md shadow-indigo-600/20"
         >
           Start Free Today
+          <ArrowRight className="w-4 h-4" />
         </Link>
       </div>
     </div>

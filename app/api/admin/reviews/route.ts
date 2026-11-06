@@ -1,11 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import mongoose from 'mongoose';
 import { dbConnect } from '@/lib/mongodb';
 import Review from '@/lib/models/Review';
 
+async function isAdminAuthenticated(): Promise<boolean> {
+  const cookieStore = await cookies();
+  return cookieStore.get('admin-auth')?.value === 'authenticated';
+}
+
 // GET /api/admin/reviews - Get all reviews (including pending)
 export async function GET(request: NextRequest) {
   try {
+    if (!(await isAdminAuthenticated())) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     await dbConnect();
     
     const { searchParams } = new URL(request.url);
@@ -37,37 +46,22 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    // Check if we have a valid database connection
     if (!mongoose.connection.readyState) {
-      console.warn('No database connection, returning empty reviews data');
       return NextResponse.json({
         reviews: [],
-        pagination: {
-          page: 1,
-          limit: 20,
-          total: 0,
-          pages: 0
-        },
-        stats: {
-          total: 0,
-          pending: 0,
-          approved: 0,
-          rejected: 0
-        }
+        pagination: { page: 1, limit: 20, total: 0, pages: 0 },
+        stats: { total: 0, pending: 0, approved: 0, rejected: 0 }
       });
     }
     
-    // Get reviews with pagination
     const reviews = await Review.find(query)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .lean();
     
-    // Get total count for pagination
     const total = await Review.countDocuments(query);
     
-    // Get stats
     const stats = {
       total: await Review.countDocuments({}),
       pending: await Review.countDocuments({ approved: false, rejected: { $ne: true } }),
@@ -85,25 +79,12 @@ export async function GET(request: NextRequest) {
       },
       stats
     });
-    
   } catch (error) {
     console.error('Error fetching reviews for admin:', error);
-    
-    // Return empty data structure for graceful degradation
     return NextResponse.json({
       reviews: [],
-      pagination: {
-        page: 1,
-        limit: 20,
-        total: 0,
-        pages: 0
-      },
-      stats: {
-        total: 0,
-        pending: 0,
-        approved: 0,
-        rejected: 0
-      }
+      pagination: { page: 1, limit: 20, total: 0, pages: 0 },
+      stats: { total: 0, pending: 0, approved: 0, rejected: 0 }
     });
   }
 }
@@ -111,6 +92,9 @@ export async function GET(request: NextRequest) {
 // PATCH /api/admin/reviews - Update review status
 export async function PATCH(request: NextRequest) {
   try {
+    if (!(await isAdminAuthenticated())) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     await dbConnect();
     
     const body = await request.json();
@@ -123,7 +107,6 @@ export async function PATCH(request: NextRequest) {
       );
     }
     
-    // Check if we have a valid database connection
     if (!mongoose.connection.readyState) {
       return NextResponse.json(
         { error: 'Database connection failed' },
@@ -140,14 +123,11 @@ export async function PATCH(request: NextRequest) {
       );
     }
     
-    // Update based on action
-    console.log(`Updating review ${reviewId} with action: ${action}`); // Debug log
     switch (action) {
       case 'approve':
         review.approved = true;
         review.rejected = false;
         review.approvedAt = new Date();
-        console.log(`Review ${reviewId} approved`); // Debug log
         break;
         
       case 'reject':
@@ -174,18 +154,11 @@ export async function PATCH(request: NextRequest) {
         );
     }
     
-    // Update featured status if provided
     if (typeof featured === 'boolean') {
       review.featured = featured;
     }
     
     await review.save();
-    console.log(`Review saved successfully:`, { // Debug log
-      _id: review._id,
-      approved: review.approved,
-      rejected: review.rejected,
-      featured: review.featured
-    });
     
     return NextResponse.json({
       message: `Review ${action}d successfully`,
@@ -196,7 +169,6 @@ export async function PATCH(request: NextRequest) {
         featured: review.featured
       }
     });
-    
   } catch (error) {
     console.error('Error updating review:', error);
     return NextResponse.json(
@@ -209,6 +181,9 @@ export async function PATCH(request: NextRequest) {
 // DELETE /api/admin/reviews - Delete review
 export async function DELETE(request: NextRequest) {
   try {
+    if (!(await isAdminAuthenticated())) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     await dbConnect();
     
     const { searchParams } = new URL(request.url);
@@ -221,7 +196,6 @@ export async function DELETE(request: NextRequest) {
       );
     }
     
-    // Check if we have a valid database connection
     if (!mongoose.connection.readyState) {
       return NextResponse.json(
         { error: 'Database connection failed' },
@@ -241,7 +215,6 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({
       message: 'Review deleted successfully'
     });
-    
   } catch (error) {
     console.error('Error deleting review:', error);
     return NextResponse.json(

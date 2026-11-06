@@ -18,9 +18,14 @@ const ClickAnalyticsSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  isBot: {
+    type: Boolean,
+    default: false
+  },
   deviceType: {
     type: String,
     enum: ['Mobile', 'Desktop', 'Tablet'],
+    default: 'Desktop',
     required: true
   },
   browser: {
@@ -51,13 +56,30 @@ const ClickAnalyticsSchema = new mongoose.Schema({
     type: String,
     default: 'Direct'
   },
+  referrerSource: {
+    type: String,
+    enum: ['Direct', 'Social Media', 'Search', 'Messaging', 'Email', 'AI / Referral', 'QR Scan', 'Other'],
+    default: 'Direct'
+  },
+  isQRScan: {
+    type: Boolean,
+    default: false
+  },
+  qrLocationTag: {
+    type: String,
+    default: ''
+  },
+  routedTo: {
+    type: String,
+    default: 'primary' // 'primary' | 'mobile' | 'ab_variant' | 'fallback'
+  },
   timestamp: {
     type: Date,
     default: Date.now
   }
 });
 
-// Add compound index for efficient duplicate detection
+// Compound index for fast duplicate/debounce & unique visitor checks
 ClickAnalyticsSchema.index({ 
   linkId: 1, 
   ipAddress: 1, 
@@ -65,10 +87,15 @@ ClickAnalyticsSchema.index({
   timestamp: -1 
 });
 
-// Add index for analytics queries
-ClickAnalyticsSchema.index({ linkId: 1, timestamp: -1 });
+// Index for analytics aggregation queries
+ClickAnalyticsSchema.index({ linkId: 1, isBot: 1, timestamp: -1 });
 ClickAnalyticsSchema.index({ timestamp: -1 });
 
-const ClickAnalytics = mongoose.models.ClickAnalytics || mongoose.model('ClickAnalytics', ClickAnalyticsSchema);
+// Ensure schema updates apply in dev hot-reload
+if (mongoose.models.ClickAnalytics) {
+  delete mongoose.models.ClickAnalytics;
+}
+
+const ClickAnalytics = mongoose.model('ClickAnalytics', ClickAnalyticsSchema);
 
 export default ClickAnalytics;

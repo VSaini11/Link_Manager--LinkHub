@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -12,33 +12,35 @@ import {
   PieChart,
   Pie,
   Cell,
-  AreaChart,
-  Area,
-  BarChart,
-  Bar,
-  RadialBarChart,
-  RadialBar
 } from "recharts";
 import {
-  TrendingUp,
-  TrendingDown,
+  BarChart2,
   Users,
   MousePointer,
-  Clock,
   Globe,
   Smartphone,
   Monitor,
   Tablet,
   RefreshCw,
-  MoreHorizontal,
+  ShieldCheck,
+  Clock,
+  Filter,
+  Sparkles,
+  Laptop,
+  Share2,
+  ChevronLeft,
+  ChevronRight,
+  IndianRupee,
   Download,
-  Eye,
-  Activity
+  QrCode,
+  Award,
+  UserCheck,
+  Mail,
+  MessageCircle
 } from "lucide-react";
 
-interface Link {
+interface LinkItem {
   _id: string;
-  id: string;
   originalUrl: string;
   shortUrl: string;
   customName: string;
@@ -46,19 +48,57 @@ interface Link {
   createdAt: string;
 }
 
+interface RecentClickItem {
+  _id: string;
+  linkName: string;
+  shortUrl: string;
+  country: string;
+  city: string;
+  deviceType: string;
+  browser: string;
+  os: string;
+  referrerDomain: string;
+  referrerSource: string;
+  isBot: boolean;
+  isQRScan?: boolean;
+  qrLocationTag?: string;
+  routedTo?: string;
+  ipAddress?: string;
+  userAgent?: string;
+  timestamp: string;
+}
+
 interface AnalyticsData {
   summary: {
     totalLinks: number;
     totalClicks: number;
-    averageClicksPerLink: number;
     uniqueClicks: number;
+    botClicksBlocked: number;
+    averageClicksPerLink: number;
     ctr: number;
+    totalRevenue?: number;
+    totalConversions?: number;
+    epc?: number;
+    totalQRScans?: number;
+    totalLeadsCount?: number;
+    clickQualityScore?: number;
+    fraudRate?: number;
+    rawAttemptedClicks?: number;
   };
+  aiInsights?: string[];
   timeline: Array<{
     date: string;
+    isoDate?: string;
     clicks: number;
+    uniqueClicks?: number;
   }>;
   geographic: Array<{
+    country: string;
+    clicks: number;
+    percentage: number;
+  }>;
+  cities?: Array<{
+    city: string;
     country: string;
     clicks: number;
     percentage: number;
@@ -69,777 +109,1322 @@ interface AnalyticsData {
     percentage: number;
     color: string;
   }>;
+  browsers?: Array<{
+    name: string;
+    clicks: number;
+    percentage: number;
+  }>;
+  operatingSystems?: Array<{
+    name: string;
+    clicks: number;
+    percentage: number;
+  }>;
   trafficSources: Array<{
     name: string;
     value: number;
     percentage: number;
     color: string;
   }>;
-  topLinks: Array<{
+  affiliateLeaderboard?: Array<{
+    _id: string;
+    affiliateName: string;
+    linkName: string;
     shortUrl: string;
-    originalUrl: string;
+    clicks: number;
+    conversions: number;
+    revenue: number;
+    commissionRate: number;
+    commissionEarned: number;
+  }>;
+  qrLocations?: Array<{
+    location: string;
+    scans: number;
+  }>;
+  smartRoutingBreakdown?: Array<{
+    route: string;
     clicks: number;
   }>;
-  engagement: {
-    bounceRate: number;
-    averageSessionDuration: string;
-    pagesPerSession: number;
-    engagementScore: number;
-  };
+  leads?: Array<{
+    _id: string;
+    linkName: string;
+    contact: string;
+    name: string;
+    country: string;
+    deviceType: string;
+    createdAt: string;
+  }>;
+  recentClicks?: RecentClickItem[];
 }
 
-interface ModernAnalyticsViewProps {
-  linkId?: string;
-}
-
-export default function ModernAnalyticsView({ linkId }: ModernAnalyticsViewProps) {
+export default function ModernAnalyticsView({ linkId: initialLinkId }: { linkId?: string }) {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
-  const [links, setLinks] = useState<Link[]>([]);
+  const [links, setLinks] = useState<LinkItem[]>([]);
+  const [selectedLinkId, setSelectedLinkId] = useState<string>(initialLinkId || "all");
+  const [selectedPeriod, setSelectedPeriod] = useState<"today" | "7d" | "30d" | "all">("30d");
+  const [analyticsViewTab, setAnalyticsViewTab] = useState<"overview" | "audience" | "business" | "logs">("overview");
+  const [businessTab, setBusinessTab] = useState<"affiliates" | "qr" | "leads">("affiliates");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(6);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedTimePeriod, setSelectedTimePeriod] = useState<'today' | '7d' | '1m' | '3m' | '2024'>('1m');
+
+  const fetchAnalyticsData = useCallback(async (showSpinner = false) => {
+    try {
+      if (showSpinner) setIsRefreshing(true);
+      else setIsLoading(true);
+      setError(null);
+
+      const params = new URLSearchParams();
+      if (selectedLinkId && selectedLinkId !== "all") {
+        params.set("linkId", selectedLinkId);
+      }
+      params.set("period", selectedPeriod);
+
+      const [analyticsRes, linksRes] = await Promise.all([
+        fetch(`/api/analytics?${params.toString()}`, { cache: "no-store" }),
+        fetch("/api/links", { cache: "no-store" })
+      ]);
+
+      if (!analyticsRes.ok) {
+        throw new Error("Failed to load analytics metrics");
+      }
+
+      const analyticsJson = await analyticsRes.json();
+      setAnalytics(analyticsJson);
+
+      if (linksRes.ok) {
+        const linksJson = await linksRes.json();
+        setLinks(Array.isArray(linksJson) ? linksJson : linksJson.links || []);
+      }
+    } catch (err: any) {
+      console.error("Analytics fetch error:", err);
+      setError(err?.message || "Unable to load analytics");
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, [selectedLinkId, selectedPeriod]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        
-        // Fetch analytics data
-        const analyticsUrl = linkId ? `/api/analytics?linkId=${linkId}` : '/api/analytics';
-        const analyticsResponse = await fetch(analyticsUrl);
-        
-        if (!analyticsResponse.ok) {
-          throw new Error(`HTTP error! status: ${analyticsResponse.status}`);
-        }
-        
-        const analyticsData = await analyticsResponse.json();
-        setAnalytics(analyticsData);
+    setCurrentPage(1);
+    fetchAnalyticsData(false);
+  }, [fetchAnalyticsData]);
 
-        // Fetch user's links for individual overviews
-        const linksResponse = await fetch('/api/links');
-        if (linksResponse.ok) {
-          const linksData = await linksResponse.json();
-          setLinks(linksData);
-        }
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        setError(error instanceof Error ? error.message : 'An error occurred');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const formatTimeAgo = (timestamp: string) => {
+    const seconds = Math.floor((Date.now() - new Date(timestamp).getTime()) / 1000);
+    if (seconds < 60) return `${Math.max(1, seconds)}s ago`;
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+  };
 
-    fetchData();
-  }, [linkId]);
+  // #2 Downloadable Ad-Fraud Dispute Report (CSV)
+  const handleDownloadFraudReport = () => {
+    if (!analytics) return;
+    const rows = [
+      ["Timestamp", "Link Name", "Status", "Country", "City", "Device", "Browser", "OS", "Source", "Routed To"],
+      ...(analytics.recentClicks || []).map((c) => [
+        new Date(c.timestamp).toISOString(),
+        `"${(c.linkName || "").replace(/"/g, '""')}"`,
+        c.isBot ? "BOT / FAKE CLICK (DISPUTE ELIGIBLE)" : "VERIFIED HUMAN",
+        c.country,
+        c.city,
+        c.deviceType,
+        c.browser,
+        c.os,
+        c.referrerSource,
+        c.routedTo || "primary"
+      ])
+    ];
+    const csvContent = "data:text/csv;charset=utf-8," + rows.map((r) => r.join(",")).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `LinkHub_Ad_Fraud_Dispute_Report_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // #3 Share Plain-Language AI Digest to WhatsApp or Email
+  const handleShareWhatsAppDigest = () => {
+    if (!analytics) return;
+    const digestText = [
+      "📊 *LinkHub Weekly AI Business Digest*",
+      `• Verified Human Clicks: ${analytics.summary.totalClicks}`,
+      `• Attributed Revenue: ₹${(analytics.summary.totalRevenue || 0).toLocaleString("en-IN")} (${analytics.summary.totalConversions || 0} sales)`,
+      `• Click Quality Score: ${analytics.summary.clickQualityScore ?? 100}% (${analytics.summary.botClicksBlocked || 0} bots blocked)`,
+      "",
+      "*Key AI Insights:*",
+      ...(analytics.aiInsights || []).map((i) => `• ${i}`)
+    ].join("\n");
+    window.open(`https://wa.me/?text=${encodeURIComponent(digestText)}`, "_blank");
+  };
+
+  const handleShareEmailDigest = () => {
+    if (!analytics) return;
+    const subject = "LinkHub Weekly AI Insights & Revenue Digest";
+    const body = [
+      "LinkHub Weekly Business Performance Digest",
+      "------------------------------------------",
+      `Verified Human Clicks: ${analytics.summary.totalClicks}`,
+      `Attributed Revenue: Rs. ${(analytics.summary.totalRevenue || 0).toLocaleString("en-IN")}`,
+      `Click Quality Score: ${analytics.summary.clickQualityScore ?? 100}% (${analytics.summary.botClicksBlocked || 0} fake/bot clicks filtered)`,
+      "",
+      "Plain-Language AI Insights:",
+      ...(analytics.aiInsights || []).map((i) => `- ${i}`)
+    ].join("\n");
+    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-3 sm:p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="animate-pulse space-y-4 sm:space-y-6">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="bg-slate-800/50 rounded-xl sm:rounded-2xl h-24 sm:h-32"></div>
-              ))}
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-              <div className="bg-slate-800/50 rounded-xl sm:rounded-2xl h-60 sm:h-80"></div>
-              <div className="bg-slate-800/50 rounded-xl sm:rounded-2xl h-60 sm:h-80"></div>
-            </div>
+      <div className="space-y-6">
+        <div className="animate-pulse space-y-6">
+          <div className="h-14 bg-white rounded-2xl border border-slate-200" />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl h-32 border border-slate-200" />
+            ))}
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 bg-white rounded-2xl h-80 border border-slate-200" />
+            <div className="bg-white rounded-2xl h-80 border border-slate-200" />
           </div>
         </div>
       </div>
     );
   }
 
-  if (error) {
+  if (error || !analytics) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-red-400 text-lg font-semibold">Error loading analytics</div>
-          <div className="text-slate-400 mt-2">{error}</div>
+      <div className="p-8 flex items-center justify-center">
+        <div className="text-center bg-white p-8 rounded-2xl border border-slate-200 shadow-sm max-w-md">
+          <div className="text-red-600 text-lg font-heading font-bold">Error loading analytics</div>
+          <div className="text-slate-500 mt-2 text-sm">{error}</div>
+          <button
+            onClick={() => fetchAnalyticsData(false)}
+            className="mt-4 px-5 py-2 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );
   }
 
-  if (!analytics) return null;
+  const {
+    summary,
+    aiInsights = [],
+    timeline = [],
+    devices = [],
+    browsers = [],
+    operatingSystems = [],
+    geographic = [],
+    cities = [],
+    trafficSources = [],
+    affiliateLeaderboard = [],
+    qrLocations = [],
+    smartRoutingBreakdown = [],
+    leads = [],
+    recentClicks = []
+  } = analytics;
 
-  // Filter data based on selected time period
-  const filterDataByPeriod = (data: any[], period: string) => {
-    const now = new Date();
-    let startDate = new Date();
-    
-    switch (period) {
-      case 'today':
-        startDate.setHours(0, 0, 0, 0);
-        break;
-      case '7d':
-        startDate.setDate(now.getDate() - 7);
-        break;
-      case '1m':
-        startDate.setMonth(now.getMonth() - 1);
-        break;
-      case '3m':
-        startDate.setMonth(now.getMonth() - 3);
-        break;
-      case '2024':
-        startDate = new Date('2024-01-01');
-        break;
-      default:
-        startDate.setMonth(now.getMonth() - 1);
-    }
-    
-    return data.filter(item => {
-      if (!item.date) return true;
-      const itemDate = new Date(item.date);
-      return itemDate >= startDate;
-    });
-  };
-
-  // Transform data for charts
-  const allSessionData = (analytics.timeline || []).map((item, index) => ({
-    name: item.date || `Day ${index + 1}`,
-    sessions: item.clicks || 0,
-    visitors: Math.floor((item.clicks || 0) * 0.8),
-  }));
-
-  // Filter session data based on selected period
-  const sessionOverviewData = filterDataByPeriod(allSessionData, selectedTimePeriod);
-
-  // Real Click Metrics Data
-  const clickMetrics = {
-    totalClicks: analytics.summary?.totalClicks || 0,
-    uniqueClicks: analytics.summary?.uniqueClicks || 0,
-    ctr: analytics.summary?.ctr || 0,
-    clickFrequency: analytics.summary?.averageClicksPerLink || 0
-  };
-
-  // Real Engagement Metrics Data  
-  const engagementMetrics = {
-    timeOnPage: analytics.engagement?.averageSessionDuration || '0:00',
-    bounceRate: analytics.engagement?.bounceRate || 0,
-    sessionDuration: analytics.engagement?.averageSessionDuration || '0:00',
-    pagesPerSession: analytics.engagement?.pagesPerSession || 0
-  };
-
-  // Real Traffic Source Data
-  const trafficSources = (analytics.trafficSources || []).map((source, index) => ({
-    name: source.name || 'Unknown',
-    value: source.value || 0,
-    percentage: source.percentage || 0,
-    color: source.color || ['#8B5CF6', '#06B6D4', '#10B981', '#F59E0B', '#EF4444'][index % 5]
-  }));
-
-  // Real Device Data
-  const deviceData = (analytics.devices || []).map((device, index) => ({
-    name: device.name || 'Unknown', // Use device.name instead of device.device
-    value: device.value || 0,
-    percentage: device.percentage || 0,
-    color: device.color || ['#3B82F6', '#8B5CF6', '#10B981'][index % 3]
-  }));
-
-  // Real Geographic Data
-  const geographicData = (analytics.geographic || []).map((geo, index) => ({
-    country: geo.country || 'Unknown',
-    clicks: geo.clicks || 0,
-    percentage: geo.percentage || 0,
-    color: ['#10B981', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444'][index % 5]
-  }));
-
-  // Calculate trend indicators based on real data
-  const calculateTrend = (currentData: number[], timelineData: any[]) => {
-    if (timelineData.length < 2) {
-      return { value: "0.0", isPositive: true }; // No trend data available
-    }
-    
-    // Get last two periods for comparison
-    const recent = timelineData.slice(-7); // Last 7 days
-    const previous = timelineData.slice(-14, -7); // Previous 7 days
-    
-    const recentTotal = recent.reduce((sum, item) => sum + (item.sessions || item.clicks || 0), 0);
-    const previousTotal = previous.reduce((sum, item) => sum + (item.sessions || item.clicks || 0), 0);
-    
-    if (previousTotal === 0) {
-      return { value: "0.0", isPositive: true };
-    }
-    
-    const change = ((recentTotal - previousTotal) / previousTotal) * 100;
-    return {
-      value: Math.abs(change).toFixed(1),
-      isPositive: change >= 0
-    };
-  };
-
-  // Calculate real trends for each metric with fallback to meaningful values
-  const trends = {
-    totalClicks: (() => {
-      // Try real trend calculation first
-      if (sessionOverviewData.length >= 14) {
-        const recent = sessionOverviewData.slice(-7).reduce((sum, item) => sum + item.sessions, 0);
-        const previous = sessionOverviewData.slice(-14, -7).reduce((sum, item) => sum + item.sessions, 0);
-        
-        if (previous === 0 && recent > 0) return { value: "100.0", isPositive: true };
-        if (previous > 0) {
-          const change = ((recent - previous) / previous) * 100;
-          return { value: Math.abs(change).toFixed(1), isPositive: change >= 0 };
-        }
-      }
-      
-      // Fallback: Generate meaningful trend based on current data
-      const totalClicks = analytics.summary?.totalClicks || 0;
-      if (totalClicks > 0) {
-        // Simulate growth trend based on click activity
-        const growthRate = Math.min(totalClicks * 2.5, 25); // Cap at 25%
-        return { value: growthRate.toFixed(1), isPositive: true };
-      }
-      return { value: "0.0", isPositive: true };
-    })(),
-    
-    uniqueClicks: (() => {
-      if (sessionOverviewData.length >= 14) {
-        const recent = sessionOverviewData.slice(-7).reduce((sum, item) => sum + item.visitors, 0);
-        const previous = sessionOverviewData.slice(-14, -7).reduce((sum, item) => sum + item.visitors, 0);
-        
-        if (previous === 0 && recent > 0) return { value: "100.0", isPositive: true };
-        if (previous > 0) {
-          const change = ((recent - previous) / previous) * 100;
-          return { value: Math.abs(change).toFixed(1), isPositive: change >= 0 };
-        }
-      }
-      
-      // Fallback based on unique vs total clicks ratio
-      const totalClicks = analytics.summary?.totalClicks || 0;
-      const uniqueClicks = analytics.summary?.uniqueClicks || 0;
-      if (uniqueClicks > 0) {
-        const uniqueRate = (uniqueClicks / Math.max(totalClicks, 1)) * 100;
-        const trend = Math.min(uniqueRate * 0.3, 20); // Generate reasonable trend
-        return { value: trend.toFixed(1), isPositive: true };
-      }
-      return { value: "0.0", isPositive: true };
-    })(),
-    
-    ctr: (() => {
-      const currentCTR = analytics.summary?.ctr || 0;
-      if (currentCTR > 0) {
-        // Generate trend based on CTR performance
-        const trend = Math.min(currentCTR * 10, 15); // Scale CTR to reasonable trend
-        return { value: trend.toFixed(1), isPositive: true };
-      }
-      
-      // If no CTR data, generate based on click activity
-      const totalClicks = analytics.summary?.totalClicks || 0;
-      if (totalClicks > 0) {
-        const trend = Math.min(totalClicks * 1.2, 12);
-        return { value: trend.toFixed(1), isPositive: true };
-      }
-      return { value: "0.0", isPositive: true };
-    })(),
-    
-    avgClicksPerLink: (() => {
-      const avgClicks = analytics.summary?.averageClicksPerLink || 0;
-      if (avgClicks > 0) {
-        // Generate trend based on performance tier
-        let trend = 0;
-        if (avgClicks >= 10) trend = 18; // High performing links
-        else if (avgClicks >= 5) trend = 12; // Medium performing
-        else if (avgClicks >= 1) trend = 8; // Low performing
-        else trend = 3; // Very low performing
-        
-        return { value: trend.toFixed(1), isPositive: true };
-      }
-      return { value: "0.0", isPositive: true };
-    })()
-  };
+  const activeDevices = devices.filter((d) => d.value > 0);
+  const totalPages = Math.max(1, Math.ceil(recentClicks.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = (safePage - 1) * pageSize;
+  const paginatedClicks = recentClicks.slice(startIndex, startIndex + pageSize);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-3 sm:p-6">
-      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
-        
-        {/* Top Metrics Row - Real Analytics Data */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-          {/* Total Clicks */}
-          <div className="bg-gradient-to-br from-indigo-500/20 to-purple-600/20 backdrop-blur-xl rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-white/10">
-            <div className="flex items-start justify-between mb-2 sm:mb-4">
-              <div>
-                <h3 className="text-lg sm:text-3xl font-bold text-white">{clickMetrics.totalClicks.toLocaleString()}</h3>
-                <p className="text-indigo-200 text-xs sm:text-sm mt-1">TOTAL CLICKS</p>
-              </div>
-              <div className="p-1 sm:p-2 bg-white/10 rounded-lg">
-                <MousePointer className="h-3 w-3 sm:h-5 sm:w-5 text-indigo-300" />
-              </div>
+    <div className="space-y-6 text-sm">
+      {/* Top Filter & Control Bar */}
+      <div className="glass-card rounded-2xl p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500">
+            <Filter className="w-4 h-4 text-indigo-600" />
+            <span>Filter Link:</span>
+          </div>
+          <select
+            value={selectedLinkId}
+            onChange={(e) => setSelectedLinkId(e.target.value)}
+            className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 min-w-[240px]"
+          >
+            <option value="all">All Links ({links.length})</option>
+            {links.map((link) => (
+              <option key={link._id} value={link._id}>
+                {link.customName || link.shortUrl.split("/").pop()} ({link.clicks || 0} clicks)
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between sm:justify-end gap-3">
+          {/* Time Period Selector */}
+          <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/80">
+            {[
+              { id: "today", label: "Today" },
+              { id: "7d", label: "Last 7D" },
+              { id: "30d", label: "Last 30D" },
+              { id: "all", label: "All Time" }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setSelectedPeriod(tab.id as any)}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  selectedPeriod === tab.id
+                    ? "bg-white text-indigo-600 shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Download Ad-Fraud Report Button (#2) */}
+          <button
+            onClick={handleDownloadFraudReport}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold transition-all shadow-xs"
+          >
+            <Download className="w-4 h-4" />
+            <span>Dispute Report (CSV)</span>
+          </button>
+
+          {/* Refresh Button */}
+          <button
+            onClick={() => fetchAnalyticsData(true)}
+            disabled={isRefreshing}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition-all shadow-xs"
+          >
+            <RefreshCw className={`w-4 h-4 text-indigo-600 ${isRefreshing ? "animate-spin" : ""}`} />
+            <span>{isRefreshing ? "Updating..." : "Refresh"}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* #3 AI Insights in Plain Language + WhatsApp & Email Digest */}
+      <div className="glass-card rounded-2xl p-6 border-l-4 border-l-indigo-600">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100">
+              <Sparkles className="w-5 h-5" />
             </div>
-            
-            {/* Mini chart */}
-            <div className="h-8 sm:h-12 -mx-1 sm:-mx-2">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={sessionOverviewData.slice(-7)}>
-                  <Line 
-                    type="monotone" 
-                    dataKey="sessions" 
-                    stroke="#8B5CF6" 
-                    strokeWidth={1.5}
-                    dot={false}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-            
-            <div className="flex items-center mt-1 sm:mt-2">
-              {trends.totalClicks.isPositive ? (
-                <TrendingUp className="h-2 w-2 sm:h-3 sm:w-3 text-green-400 mr-1" />
-              ) : (
-                <TrendingDown className="h-2 w-2 sm:h-3 sm:w-3 text-red-400 mr-1" />
-              )}
-              <span className={`text-xs sm:text-sm font-semibold ${trends.totalClicks.isPositive ? 'text-green-400' : 'text-red-400'}`}>
-                {trends.totalClicks.isPositive ? '+' : '-'}{trends.totalClicks.value}%
-              </span>
+            <div>
+              <h3 className="text-base sm:text-lg font-heading font-bold text-slate-900">
+                AI Business Insights in Plain Language
+              </h3>
+              <p className="text-xs text-slate-500">
+                Actionable revenue, peak timing, and ad-fraud takeaways—ready to send to WhatsApp or Email
+              </p>
             </div>
           </div>
 
-          {/* Unique Clicks */}
-          <div className="bg-gradient-to-br from-slate-700/30 to-slate-800/50 backdrop-blur-xl rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-white/10">
-            <div className="flex items-start justify-between mb-2 sm:mb-4">
-              <div>
-                <h3 className="text-lg sm:text-3xl font-bold text-white">{clickMetrics.uniqueClicks.toLocaleString()}</h3>
-                <p className="text-slate-300 text-xs sm:text-sm mt-1">UNIQUE CLICKS</p>
-              </div>
-              <div className="p-1 sm:p-2 bg-white/10 rounded-lg">
-                <Users className="h-3 w-3 sm:h-5 sm:w-5 text-slate-300" />
-              </div>
-            </div>
-            
-            <div className="h-8 sm:h-12 -mx-1 sm:-mx-2">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={sessionOverviewData.slice(-7)}>
-                  <Line 
-                    type="monotone" 
-                    dataKey="visitors" 
-                    stroke="#64748B" 
-                    strokeWidth={1.5}
-                    dot={false}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-            
-            <div className="flex items-center mt-1 sm:mt-2">
-              {trends.uniqueClicks.isPositive ? (
-                <TrendingUp className="h-2 w-2 sm:h-3 sm:w-3 text-green-400 mr-1" />
-              ) : (
-                <TrendingDown className="h-2 w-2 sm:h-3 sm:w-3 text-red-400 mr-1" />
-              )}
-              <span className={`text-xs sm:text-sm font-semibold ${trends.uniqueClicks.isPositive ? 'text-green-400' : 'text-red-400'}`}>
-                {trends.uniqueClicks.isPositive ? '+' : '-'}{trends.uniqueClicks.value}%
-              </span>
-            </div>
-          </div>
-
-          {/* CTR (Click-Through Rate) */}
-          <div className="bg-gradient-to-br from-slate-700/30 to-slate-800/50 backdrop-blur-xl rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-white/10">
-            <div className="flex items-start justify-between mb-2 sm:mb-4">
-              <div>
-                <h3 className="text-lg sm:text-3xl font-bold text-white">{clickMetrics.ctr.toFixed(2)}%</h3>
-                <p className="text-slate-300 text-xs sm:text-sm mt-1">CTR (CLICK-THROUGH RATE)</p>
-              </div>
-              <div className="p-1 sm:p-2 bg-white/10 rounded-lg">
-                <TrendingUp className="h-3 w-3 sm:h-5 sm:w-5 text-slate-300" />
-              </div>
-            </div>
-            
-            <div className="h-8 sm:h-12 -mx-1 sm:-mx-2">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={sessionOverviewData.slice(-7)}>
-                  <Area 
-                    type="monotone" 
-                    dataKey="sessions" 
-                    stroke="#10B981" 
-                    fill="#10B981"
-                    fillOpacity={0.3}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-            
-            <div className="flex items-center mt-1 sm:mt-2">
-              {trends.ctr.isPositive ? (
-                <TrendingUp className="h-2 w-2 sm:h-3 sm:w-3 text-green-400 mr-1" />
-              ) : (
-                <TrendingDown className="h-2 w-2 sm:h-3 sm:w-3 text-red-400 mr-1" />
-              )}
-              <span className={`text-xs sm:text-sm font-semibold ${trends.ctr.isPositive ? 'text-green-400' : 'text-red-400'}`}>
-                {trends.ctr.isPositive ? '+' : '-'}{trends.ctr.value}%
-              </span>
-            </div>
-          </div>
-
-          {/* Click Frequency */}
-          <div className="bg-gradient-to-br from-slate-700/30 to-slate-800/50 backdrop-blur-xl rounded-xl sm:rounded-2xl p-3 sm:p-6 border border-white/10">
-            <div className="flex items-start justify-between mb-2 sm:mb-4">
-              <div>
-                <h3 className="text-lg sm:text-3xl font-bold text-white">{clickMetrics.clickFrequency.toFixed(1)}</h3>
-                <p className="text-slate-300 text-xs sm:text-sm mt-1">AVG CLICKS/LINK</p>
-              </div>
-              <div className="p-1 sm:p-2 bg-white/10 rounded-lg">
-                <Activity className="h-3 w-3 sm:h-5 sm:w-5 text-slate-300" />
-              </div>
-            </div>
-            
-            <div className="h-8 sm:h-12 -mx-1 sm:-mx-2">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={sessionOverviewData.slice(-7)}>
-                  <Area 
-                    type="monotone" 
-                    dataKey="visitors" 
-                    stroke="#F59E0B" 
-                    fill="#F59E0B"
-                    fillOpacity={0.3}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-            
-            <div className="flex items-center mt-1 sm:mt-2">
-              {trends.avgClicksPerLink.isPositive ? (
-                <TrendingUp className="h-2 w-2 sm:h-3 sm:w-3 text-green-400 mr-1" />
-              ) : (
-                <TrendingDown className="h-2 w-2 sm:h-3 sm:w-3 text-red-400 mr-1" />
-              )}
-              <span className={`text-xs sm:text-sm font-semibold ${trends.avgClicksPerLink.isPositive ? 'text-green-400' : 'text-red-400'}`}>
-                {trends.avgClicksPerLink.isPositive ? '+' : '-'}{trends.avgClicksPerLink.value}%
-              </span>
-            </div>
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={handleShareWhatsAppDigest}
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors shadow-sm"
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span>WhatsApp Digest</span>
+            </button>
+            <button
+              onClick={handleShareEmailDigest}
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-colors shadow-sm"
+            >
+              <Mail className="w-4 h-4" />
+              <span>Email Digest</span>
+            </button>
           </div>
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-          
-          {/* Sessions Overview - Left Column */}
-          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
-            
-            {/* Individual Links Overview */}
-            <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/10">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-4">
-                <div>
-                  <h3 className="text-lg sm:text-xl font-semibold text-white">Links Overview</h3>
-                  <p className="text-slate-400 text-xs sm:text-sm mt-1">Performance metrics for each link</p>
-                </div>
-                <div className="flex items-center justify-center sm:justify-end">
-                  <div className="flex items-center space-x-1 sm:space-x-2 bg-slate-700/50 rounded-lg p-1 overflow-x-auto">
-                    {['today', '7d', '1m', '3m', '2024'].map((period) => (
-                      <button
-                        key={period}
-                        onClick={() => setSelectedTimePeriod(period as any)}
-                        className={`px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium rounded transition-all duration-200 whitespace-nowrap ${
-                          selectedTimePeriod === period
-                            ? 'bg-indigo-500 text-white shadow-lg'
-                            : 'text-slate-400 hover:text-white hover:bg-slate-600/50'
-                        }`}
-                      >
-                        {period === 'today' ? 'Today' : period === '7d' ? '7d' : period === '1m' ? '1m' : period === '3m' ? '3m' : '2024'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              
-              {/* Individual Link Cards */}
-              <div className="space-y-3 sm:space-y-4">
-                {links.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="text-slate-400 text-lg mb-2">No links found</div>
-                    <p className="text-slate-500 text-sm">Create your first shortened link to see analytics here.</p>
-                  </div>
-                ) : (
-                  links.slice(0, 6).map((link) => {
-                    // Calculate performance metrics for this link
-                    const linkPerformance = {
-                      totalClicks: link.clicks,
-                      clickRate: analytics.summary?.totalClicks ? ((link.clicks / analytics.summary.totalClicks) * 100).toFixed(1) : '0.0',
-                      isTopPerformer: analytics.topLinks?.some(topLink => topLink.shortUrl === link.shortUrl),
-                      createdDaysAgo: Math.floor((new Date().getTime() - new Date(link.createdAt).getTime()) / (1000 * 60 * 60 * 24))
-                    };
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+          {aiInsights.map((insight, index) => (
+            <div
+              key={index}
+              className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 text-xs text-slate-700 font-medium leading-relaxed"
+            >
+              {insight}
+            </div>
+          ))}
+        </div>
+      </div>
 
-                    const getTrendColor = (clicks: number) => {
-                      if (clicks >= 100) return 'text-green-400';
-                      if (clicks >= 50) return 'text-yellow-400';
-                      if (clicks >= 10) return 'text-blue-400';
-                      return 'text-slate-400';
-                    };
+      {/* Top 4 High-Impact Business KPI Cards (#1 Revenue + #2 Click Quality Score + Human Clicks + Unique) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        {/* #1 Click-to-Revenue Attribution */}
+        <div className="glass-card rounded-2xl p-6 card-hover">
+          <div className="flex items-start justify-between mb-2">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Attributed Revenue</p>
+              <h3 className="text-3xl sm:text-4xl font-heading font-extrabold text-emerald-700 mt-1">
+                ₹{(summary.totalRevenue || 0).toLocaleString("en-IN")}
+              </h3>
+            </div>
+            <div className="w-12 h-12 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
+              <IndianRupee className="w-6 h-6" />
+            </div>
+          </div>
+          <p className="text-xs text-slate-500">
+            <span className="font-bold text-emerald-700">{summary.totalConversions || 0} sales</span> · ₹{summary.epc || 0} earned/click
+          </p>
+        </div>
 
-                    return (
-                      <div key={link._id} className="bg-gradient-to-r from-slate-700/30 to-slate-800/30 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-white/5 hover:border-white/10 transition-all duration-300 hover:bg-slate-700/40">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center space-x-2 mb-2">
-                              <h4 className="text-white text-sm sm:text-base font-medium truncate">
-                                {link.customName || 'Untitled Link'}
-                              </h4>
-                              {linkPerformance.isTopPerformer && (
-                                <span className="bg-gradient-to-r from-yellow-400 to-orange-400 text-black text-xs px-2 py-1 rounded-full font-semibold">
-                                  ⭐ Top
-                                </span>
-                              )}
-                            </div>
-                            <div className="text-slate-400 text-xs mb-2 space-y-1">
-                              <div className="truncate">
-                                <span className="text-indigo-400">{link.shortUrl}</span>
-                              </div>
-                              <div className="truncate">
-                                → {link.originalUrl}
-                              </div>
-                            </div>
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-xs gap-1 sm:gap-0">
-                              <span className="text-slate-500">
-                                Created {linkPerformance.createdDaysAgo}d ago
-                              </span>
-                              <span className="text-slate-500">
-                                {linkPerformance.clickRate}% of total traffic
-                              </span>
-                            </div>
-                          </div>
-                          <div className="text-center sm:text-right">
-                            <div className={`text-xl sm:text-2xl font-bold ${getTrendColor(linkPerformance.totalClicks)}`}>
-                              {linkPerformance.totalClicks.toLocaleString()}
-                            </div>
-                            <div className="text-xs text-slate-400">clicks</div>
-                            <div className="mt-1 sm:mt-2 flex items-center justify-center sm:justify-end space-x-1">
-                              <Activity className="w-3 h-3 text-slate-400" />
-                              <span className="text-xs text-slate-400">
-                                {linkPerformance.totalClicks > 0 ? 'Active' : 'Inactive'}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
+        {/* #2 Click Quality Score (Ad-Fraud Detection) */}
+        <div className="glass-card rounded-2xl p-6 card-hover">
+          <div className="flex items-start justify-between mb-2">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Click Quality Score</p>
+              <h3 className="text-3xl sm:text-4xl font-heading font-extrabold text-slate-900 mt-1">
+                {summary.clickQualityScore ?? 100}%
+              </h3>
+            </div>
+            <div className="w-12 h-12 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
+              <ShieldCheck className="w-6 h-6" />
+            </div>
+          </div>
+          <p className="text-xs text-slate-500">
+            Of {summary.rawAttemptedClicks || summary.totalClicks} hits,{" "}
+            <span className="font-bold text-amber-700">{summary.botClicksBlocked || 0} were bots/fake</span>
+          </p>
+        </div>
+
+        {/* Verified Human Clicks */}
+        <div className="glass-card rounded-2xl p-6 card-hover">
+          <div className="flex items-start justify-between mb-2">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Verified Human Clicks</p>
+              <h3 className="text-3xl sm:text-4xl font-heading font-extrabold text-slate-900 mt-1">
+                {summary.totalClicks.toLocaleString()}
+              </h3>
+            </div>
+            <div className="w-12 h-12 rounded-xl bg-violet-50 border border-violet-100 flex items-center justify-center text-violet-600">
+              <MousePointer className="w-6 h-6" />
+            </div>
+          </div>
+          <p className="text-xs text-slate-500">
+            100% real browsers ({summary.totalQRScans || 0} QR scans)
+          </p>
+        </div>
+
+        {/* True Unique Visitors & Leads */}
+        <div className="glass-card rounded-2xl p-6 card-hover">
+          <div className="flex items-start justify-between mb-2">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Unique Visitors & Leads</p>
+              <h3 className="text-3xl sm:text-4xl font-heading font-extrabold text-slate-900 mt-1">
+                {summary.uniqueClicks.toLocaleString()}
+              </h3>
+            </div>
+            <div className="w-12 h-12 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600">
+              <Users className="w-6 h-6" />
+            </div>
+          </div>
+          <p className="text-xs text-slate-500">
+            <span className="font-bold text-indigo-600">{summary.ctr}% unique</span> · {summary.totalLeadsCount || 0} leads captured
+          </p>
+        </div>
+      </div>
+
+      {/* Modern Compact Section Tabs Navigation (No Endless Scrolling) */}
+      <div className="flex items-center justify-start gap-2 bg-slate-200/80 p-1.5 rounded-2xl border border-slate-200 overflow-x-auto">
+        <button
+          onClick={() => setAnalyticsViewTab("overview")}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap ${
+            analyticsViewTab === "overview"
+              ? "bg-white text-indigo-700 shadow-sm"
+              : "text-slate-600 hover:text-slate-900"
+          }`}
+        >
+          <BarChart2 className="w-4 h-4 text-indigo-600" />
+          <span>Timeline & Traffic Sources</span>
+        </button>
+
+        <button
+          onClick={() => setAnalyticsViewTab("audience")}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap ${
+            analyticsViewTab === "audience"
+              ? "bg-white text-indigo-700 shadow-sm"
+              : "text-slate-600 hover:text-slate-900"
+          }`}
+        >
+          <Globe className="w-4 h-4 text-emerald-600" />
+          <span>Geographic, Devices & Browsers</span>
+        </button>
+
+        <button
+          onClick={() => setAnalyticsViewTab("business")}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap ${
+            analyticsViewTab === "business"
+              ? "bg-white text-indigo-700 shadow-sm"
+              : "text-slate-600 hover:text-slate-900"
+          }`}
+        >
+          <Award className="w-4 h-4 text-violet-600" />
+          <span>Affiliates, QR & Leads ({affiliateLeaderboard.length + qrLocations.length + leads.length})</span>
+        </button>
+
+        <button
+          onClick={() => setAnalyticsViewTab("logs")}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap ${
+            analyticsViewTab === "logs"
+              ? "bg-white text-indigo-700 shadow-sm"
+              : "text-slate-600 hover:text-slate-900"
+          }`}
+        >
+          <Clock className="w-4 h-4 text-amber-600" />
+          <span>Live Click Activity Stream ({recentClicks.length})</span>
+        </button>
+      </div>
+
+      {/* Main Timeline Chart + Traffic Sources */}
+      {analyticsViewTab === "overview" && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in duration-200">
+          {/* Daily Clicks & Unique Visitors Chart */}
+          <div className="lg:col-span-2 glass-card rounded-2xl p-6 sm:p-7">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
+              <div>
+                <h3 className="text-lg sm:text-xl font-heading font-bold text-slate-900">Click Performance Over Time</h3>
+                <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                  Real-time daily human clicks vs. distinct visitors
+                </p>
               </div>
-              
-              {/* Show more links indicator */}
-              {links.length > 6 && (
-                <div className="mt-4 text-center">
-                  <div className="text-slate-400 text-sm">
-                    Showing 6 of {links.length} links
-                  </div>
-                </div>
-              )}
-              
-              {/* Summary Metrics below links */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-white/10">
-                <div className="text-center">
-                  <div className="text-lg sm:text-2xl font-bold text-white">{engagementMetrics.timeOnPage}</div>
-                  <div className="text-xs text-slate-400 mt-1">Avg Time on Page</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-lg sm:text-2xl font-bold text-white">{engagementMetrics.bounceRate}</div>
-                  <div className="text-xs text-slate-400 mt-1">Bounce Rate</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-lg sm:text-2xl font-bold text-white">{engagementMetrics.pagesPerSession}</div>
-                  <div className="text-xs text-slate-400 mt-1">Pages/Session</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-lg sm:text-2xl font-bold text-white">{analytics.summary?.totalLinks || 0}</div>
-                  <div className="text-xs text-slate-400 mt-1">Total Links</div>
-                </div>
+              <div className="flex items-center gap-4 text-xs sm:text-sm font-semibold">
+                <span className="flex items-center gap-1.5 text-slate-700">
+                  <span className="w-2.5 h-2.5 rounded-full bg-indigo-600" /> Total Clicks
+                </span>
+                <span className="flex items-center gap-1.5 text-slate-700">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> Unique Visitors
+                </span>
               </div>
             </div>
 
-            {/* Traffic Source Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
-              {trafficSources.slice(0, 3).map((source, index) => (
-                <div key={index} className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/10 text-center">
-                  <div className="mb-2 sm:mb-3">
-                    <div className="text-xs text-slate-400 uppercase tracking-wide">
-                      {index === 0 ? 'TOP SOURCE' : index === 1 ? 'SECONDARY' : 'THIRD SOURCE'}
-                    </div>
-                    <div className="text-sm sm:text-lg font-semibold text-white mt-1">{source.name}</div>
-                  </div>
-                  <div className="text-xl sm:text-3xl font-bold text-white">{source.value.toLocaleString()}</div>
-                  <div className="text-xs text-slate-400 mt-1">clicks ({source.percentage}%)</div>
+            <div className="h-72 sm:h-80 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={timeline} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorClicks" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.25} />
+                      <stop offset="95%" stopColor="#4f46e5" stopOpacity={0.0} />
+                    </linearGradient>
+                    <linearGradient id="colorUnique" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                  <XAxis
+                    dataKey="date"
+                    tick={{ fill: "#64748b", fontSize: 12 }}
+                    axisLine={{ stroke: "#e2e8f0" }}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    allowDecimals={false}
+                    tick={{ fill: "#64748b", fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#ffffff",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: "12px",
+                      boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.08)",
+                      fontSize: "13px",
+                      color: "#0f172a"
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="clicks"
+                    name="Total Clicks"
+                    stroke="#4f46e5"
+                    strokeWidth={2.5}
+                    fillOpacity={1}
+                    fill="url(#colorClicks)"
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="uniqueClicks"
+                    name="Unique Visitors"
+                    stroke="#10b981"
+                    strokeWidth={2}
+                    fillOpacity={1}
+                    fill="url(#colorUnique)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Traffic Sources Breakdown */}
+          <div className="glass-card rounded-2xl p-6 sm:p-7 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-lg sm:text-xl font-heading font-bold text-slate-900">Traffic Sources</h3>
+                  <p className="text-xs sm:text-sm text-slate-500 mt-1">Where your visitors originate</p>
                 </div>
-              ))}
-              
-              {/* Fill empty slots if less than 3 sources */}
-              {Array.from({ length: Math.max(0, 3 - trafficSources.length) }).map((_, index) => (
-                <div key={`empty-${index}`} className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/10 text-center">
-                  <div className="mb-2 sm:mb-3">
-                    <div className="text-xs text-slate-400 uppercase tracking-wide">NO DATA</div>
-                    <div className="text-sm sm:text-lg font-semibold text-white mt-1">--</div>
+                <Share2 className="w-5 h-5 text-indigo-600" />
+              </div>
+
+              {trafficSources.length === 0 ? (
+                <div className="py-20 text-center">
+                  <p className="text-sm font-semibold text-slate-600">No referrer data yet</p>
+                  <p className="text-xs text-slate-400 mt-1">Share your short links to track sources</p>
+                </div>
+              ) : (
+                <div className="space-y-4 mt-4">
+                  {trafficSources.map((source, idx) => (
+                    <div key={idx} className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs sm:text-sm">
+                        <span className="font-semibold text-slate-800 flex items-center gap-2">
+                          <span
+                            className="w-2.5 h-2.5 rounded-full"
+                            style={{ backgroundColor: source.color }}
+                          />
+                          {source.name}
+                        </span>
+                        <span className="text-slate-600 font-medium">
+                          <strong className="text-slate-900 font-bold">{source.value}</strong> ({source.percentage}%)
+                        </span>
+                      </div>
+                      <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                        <div
+                          className="h-2 rounded-full transition-all duration-500"
+                          style={{
+                            width: `${Math.max(4, source.percentage)}%`,
+                            backgroundColor: source.color
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-slate-100 text-xs text-slate-400">
+              Supports HTTP Referer, QR tags & <code className="text-indigo-600 font-semibold">?utm_source=</code>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Compact Tabbed Business Suite (#6 QR Locations, #7 Affiliate Leaderboard, #8 Captured Leads) */}
+      {analyticsViewTab === "business" && (
+        <div className="glass-card rounded-2xl p-6 sm:p-7 animate-in fade-in duration-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 border-b border-slate-100 pb-4">
+            <div>
+              <h3 className="text-lg sm:text-xl font-heading font-bold text-slate-900">
+                Revenue Attribution, QR Locations & Lead Capture
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                Switch tabs to view Affiliate Commissions (#7), Print QR Comparisons (#6), or Captured Customer Leads (#8)
+              </p>
+            </div>
+
+            <div className="flex items-center bg-slate-100 p-1.5 rounded-xl border border-slate-200/80">
+              <button
+                onClick={() => setBusinessTab("affiliates")}
+                className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${
+                  businessTab === "affiliates"
+                    ? "bg-white text-indigo-600 shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <Award className="w-4 h-4" />
+                <span>Affiliates & Revenue ({affiliateLeaderboard.length})</span>
+              </button>
+              <button
+                onClick={() => setBusinessTab("qr")}
+                className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${
+                  businessTab === "qr"
+                    ? "bg-white text-indigo-600 shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <QrCode className="w-4 h-4" />
+                <span>QR Locations ({qrLocations.length})</span>
+              </button>
+              <button
+                onClick={() => setBusinessTab("leads")}
+                className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${
+                  businessTab === "leads"
+                    ? "bg-white text-indigo-600 shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <UserCheck className="w-4 h-4" />
+                <span>Captured Leads ({leads.length})</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Sub-Tab 1: Affiliate & Revenue Leaderboard */}
+          {businessTab === "affiliates" && (
+            <div>
+              {affiliateLeaderboard.length === 0 ? (
+                <div className="text-center py-12 bg-slate-50 rounded-xl border border-slate-200/60">
+                  <p className="text-sm font-semibold text-slate-700">No affiliate or revenue links recorded yet</p>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Use the &quot;+ ₹ Sale&quot; or Settings button on any link in the Dashboard to assign an influencer or record a sale.
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto rounded-xl border border-slate-200/80 bg-white">
+                  <table className="w-full text-left border-collapse text-xs sm:text-sm">
+                    <thead className="bg-slate-50 border-b border-slate-200/80 text-[11px] sm:text-xs uppercase font-semibold text-slate-500">
+                      <tr>
+                        <th className="py-3 px-4">Affiliate / Partner</th>
+                        <th className="py-3 px-4">Campaign Link</th>
+                        <th className="py-3 px-4">Clicks</th>
+                        <th className="py-3 px-4">Sales</th>
+                        <th className="py-3 px-4">Revenue Generated</th>
+                        <th className="py-3 px-4 text-right">Commission Payout</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {affiliateLeaderboard.map((item) => (
+                        <tr key={item._id} className="hover:bg-slate-50/80">
+                          <td className="py-3 px-4 font-bold text-slate-900">{item.affiliateName}</td>
+                          <td className="py-3 px-4 text-slate-600">{item.linkName}</td>
+                          <td className="py-3 px-4 font-semibold text-slate-800">{item.clicks}</td>
+                          <td className="py-3 px-4 font-semibold text-emerald-700">{item.conversions}</td>
+                          <td className="py-3 px-4 font-bold text-emerald-700">
+                            ₹{item.revenue.toLocaleString("en-IN")}
+                          </td>
+                          <td className="py-3 px-4 text-right font-bold text-indigo-600">
+                            ₹{item.commissionEarned.toLocaleString("en-IN")} ({item.commissionRate}%)
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Sub-Tab 2: Offline-to-Online Dynamic QR Location Comparison & Smart Routing */}
+          {businessTab === "qr" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="p-5 rounded-xl bg-slate-50 border border-slate-200/80">
+                <h4 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-500 mb-3.5">
+                  QR Scans by Print Location (?qr=1&loc=...)
+                </h4>
+                {qrLocations.length === 0 ? (
+                  <p className="text-xs sm:text-sm text-slate-400 py-6">
+                    No QR scans yet. Open the QR modal on any link and add a location tag like <code>Store-A</code> vs <code>Store-B</code>.
+                  </p>
+                ) : (
+                  <div className="space-y-2.5">
+                    {qrLocations.map((q, i) => (
+                      <div key={i} className="flex items-center justify-between p-3 bg-white rounded-lg border border-slate-200/70 text-xs sm:text-sm">
+                        <span className="font-semibold text-slate-800">{q.location}</span>
+                        <span className="font-bold text-indigo-600">{q.scans} scans</span>
+                      </div>
+                    ))}
                   </div>
-                  <div className="text-xl sm:text-3xl font-bold text-white">0</div>
-                  <div className="text-xs text-slate-400 mt-1">clicks (0%)</div>
+                )}
+              </div>
+
+              <div className="p-5 rounded-xl bg-slate-50 border border-slate-200/80">
+                <h4 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-500 mb-3.5">
+                  Smart Routing & A/B Variant Split (#4)
+                </h4>
+                <div className="space-y-2.5">
+                  {smartRoutingBreakdown.map((r, i) => (
+                    <div key={i} className="flex items-center justify-between p-3 bg-white rounded-lg border border-slate-200/70 text-xs sm:text-sm">
+                      <span className="font-semibold text-slate-800 capitalize">
+                        {r.route === "ab_variant" ? "A/B Variant B" : r.route === "mobile" ? "Mobile App/Store Route" : r.route === "fallback" ? "404 Fallback Page" : "Primary Destination"}
+                      </span>
+                      <span className="font-bold text-slate-900">{r.clicks} visitors</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Sub-Tab 3: Click-to-Lead Captured Contacts */}
+          {businessTab === "leads" && (
+            <div>
+              {leads.length === 0 ? (
+                <div className="text-center py-12 bg-slate-50 rounded-xl border border-slate-200/60">
+                  <p className="text-sm font-semibold text-slate-700">No customer leads captured yet</p>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Enable &quot;Click-to-Lead Capture Gate&quot; in a link&apos;s settings to collect visitor email or phone numbers before redirecting.
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto rounded-xl border border-slate-200/80 bg-white">
+                  <table className="w-full text-left border-collapse text-xs sm:text-sm">
+                    <thead className="bg-slate-50 border-b border-slate-200/80 text-[11px] sm:text-xs uppercase font-semibold text-slate-500">
+                      <tr>
+                        <th className="py-3 px-4">Visitor Name</th>
+                        <th className="py-3 px-4">Email / WhatsApp Phone</th>
+                        <th className="py-3 px-4">Link</th>
+                        <th className="py-3 px-4">Location & Device</th>
+                        <th className="py-3 px-4 text-right">Captured</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {leads.map((lead) => (
+                        <tr key={lead._id} className="hover:bg-slate-50/80">
+                          <td className="py-3 px-4 font-semibold text-slate-900">{lead.name}</td>
+                          <td className="py-3 px-4 font-bold text-indigo-600">{lead.contact}</td>
+                          <td className="py-3 px-4 text-slate-600">{lead.linkName}</td>
+                          <td className="py-3 px-4 text-slate-600">
+                            {lead.country} · {lead.deviceType}
+                          </td>
+                          <td className="py-3 px-4 text-right text-slate-400 font-medium">
+                            {formatTimeAgo(lead.createdAt)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Second Row: Geographic (Countries & Cities) + Devices + Browsers & OS */}
+      {analyticsViewTab === "audience" && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in duration-200">
+        {/* Card 1: Geographic Breakdown */}
+        <div className="glass-card rounded-2xl p-6 flex flex-col justify-between border border-slate-200/90 shadow-sm hover:shadow-md transition-shadow">
+          <div>
+            {/* Card Header */}
+            <div className="flex items-start justify-between pb-4 mb-5 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shadow-xs">
+                  <Globe className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-heading font-bold text-slate-900">Geographic Locations</h3>
+                  <p className="text-xs text-slate-500">Top countries & city hotspots</p>
+                </div>
+              </div>
+              <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60 text-[11px] font-bold">
+                {geographic.length} {geographic.length === 1 ? "Country" : "Countries"}
+              </span>
+            </div>
+
+            {geographic.length === 0 ? (
+              <div className="py-12 text-center bg-slate-50/70 rounded-xl border border-dashed border-slate-200">
+                <Globe className="w-7 h-7 text-slate-300 mx-auto mb-2" />
+                <p className="text-sm font-semibold text-slate-600">No location data yet</p>
+                <p className="text-xs text-slate-400 mt-1">Countries & cities appear on first click</p>
+              </div>
+            ) : (
+              <div className="space-y-5">
+                {/* Countries List */}
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    <span>Top Countries</span>
+                    <span>Visits & Share</span>
+                  </div>
+                  {geographic.slice(0, 4).map((loc, index) => (
+                    <div
+                      key={index}
+                      className="p-3 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-emerald-200 transition-all"
+                    >
+                      <div className="flex items-center justify-between text-xs mb-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className="w-5 h-5 rounded-md bg-emerald-100/80 text-emerald-700 font-bold text-[10px] flex items-center justify-center">
+                            #{index + 1}
+                          </span>
+                          <span className="font-bold text-slate-800">{loc.country}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-extrabold text-slate-900">{loc.clicks}</span>
+                          <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-semibold text-[10px]">
+                            {loc.percentage}%
+                          </span>
+                        </div>
+                      </div>
+                      <div className="w-full bg-slate-200/70 rounded-full h-1.5 overflow-hidden">
+                        <div
+                          className="h-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-500"
+                          style={{ width: `${Math.max(6, loc.percentage)}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Top Cities List */}
+                {cities && cities.length > 0 && (
+                  <div className="pt-4 border-t border-slate-100 space-y-2.5">
+                    <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                      <span>City Hotspots</span>
+                      <span>Clicks</span>
+                    </div>
+                    <div className="grid grid-cols-1 gap-2">
+                      {cities.slice(0, 4).map((c, idx) => (
+                        <div
+                          key={idx}
+                          className="relative overflow-hidden flex items-center justify-between text-xs py-2 px-3 bg-slate-50/90 hover:bg-slate-100/70 rounded-xl border border-slate-200/70 transition-colors"
+                        >
+                          <div
+                            className="absolute inset-y-0 left-0 bg-emerald-500/8 pointer-events-none"
+                            style={{ width: `${Math.max(8, c.percentage)}%` }}
+                          />
+                          <div className="relative flex items-center gap-2 min-w-0">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" />
+                            <span className="font-semibold text-slate-800 truncate">{c.city}</span>
+                            <span className="text-[11px] text-slate-400 truncate">({c.country})</span>
+                          </div>
+                          <div className="relative flex items-center gap-2 flex-shrink-0">
+                            <span className="text-[11px] text-slate-400 font-medium">{c.percentage}%</span>
+                            <span className="px-2 py-0.5 rounded-md bg-white border border-slate-200/80 font-extrabold text-slate-900 shadow-2xs">
+                              {c.clicks}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+            <span>Resolved via Edge IP & Geo-DNS</span>
+            <span className="font-semibold text-emerald-600">
+              {cities && cities[0] ? `Top: ${cities[0].city}` : "Live Geo"}
+            </span>
+          </div>
+        </div>
+
+        {/* Card 2: Device Types */}
+        <div className="glass-card rounded-2xl p-6 flex flex-col justify-between border border-slate-200/90 shadow-sm hover:shadow-md transition-shadow">
+          <div>
+            {/* Card Header */}
+            <div className="flex items-start justify-between pb-4 mb-4 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-xs">
+                  <Smartphone className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-heading font-bold text-slate-900">Device Types</h3>
+                  <p className="text-xs text-slate-500">Desktop, Mobile & Tablet split</p>
+                </div>
+              </div>
+              <span className="px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200/60 text-[11px] font-bold">
+                {summary.totalClicks} Visits
+              </span>
+            </div>
+
+            {/* Donut Chart with Center Summary Label */}
+            {activeDevices.length > 0 ? (
+              <div className="relative h-44 mb-5 flex items-center justify-center">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={activeDevices}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={48}
+                      outerRadius={72}
+                      paddingAngle={4}
+                      dataKey="value"
+                      stroke="none"
+                    >
+                      {activeDevices.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#ffffff",
+                        border: "1px solid #e2e8f0",
+                        borderRadius: "10px",
+                        fontSize: "12px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.08)"
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <span className="text-2xl font-heading font-extrabold text-slate-900 leading-none">
+                    {summary.totalClicks}
+                  </span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-1">
+                    Total Visits
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="h-44 mb-5 flex items-center justify-center text-center bg-slate-50/70 rounded-xl border border-dashed border-slate-200">
+                <p className="text-xs text-slate-400">No device visits recorded yet</p>
+              </div>
+            )}
+
+            {/* Device Rows with Progress Bars */}
+            <div className="space-y-2.5">
+              {devices.map((device, index) => (
+                <div
+                  key={index}
+                  className="p-3 bg-slate-50/80 hover:bg-white border border-slate-200/70 hover:border-indigo-200 rounded-xl transition-all"
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center space-x-2.5">
+                      <div
+                        className="p-1.5 rounded-lg border"
+                        style={{
+                          backgroundColor: `${device.color}12`,
+                          borderColor: `${device.color}30`,
+                          color: device.color
+                        }}
+                      >
+                        {device.name === "Mobile" && <Smartphone className="h-3.5 w-3.5" />}
+                        {device.name === "Desktop" && <Monitor className="h-3.5 w-3.5" />}
+                        {device.name === "Tablet" && <Tablet className="h-3.5 w-3.5" />}
+                      </div>
+                      <span className="text-slate-800 font-bold text-xs">{device.name}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-slate-900 font-extrabold text-xs">{device.value}</span>
+                      <span
+                        className="px-1.5 py-0.5 rounded text-[10px] font-bold"
+                        style={{
+                          backgroundColor: `${device.color}15`,
+                          color: device.color
+                        }}
+                      >
+                        {device.percentage}%
+                      </span>
+                    </div>
+                  </div>
+                  <div className="w-full bg-slate-200/70 rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className="h-1.5 rounded-full transition-all duration-500"
+                      style={{
+                        width: `${device.value > 0 ? Math.max(5, device.percentage) : 0}%`,
+                        backgroundColor: device.color
+                      }}
+                    />
+                  </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Right Column - Device & Geographic Analytics */}
-          <div className="space-y-4 sm:space-y-6">
-            
-            {/* Device Types Analysis */}
-            <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/10">
-              <div className="flex items-center justify-between mb-4 sm:mb-6">
-                <h3 className="text-base sm:text-lg font-semibold text-white">Device Analytics</h3>
-                <button>
-                  <MoreHorizontal className="h-4 w-4 sm:h-5 sm:w-5 text-slate-400" />
-                </button>
-              </div>
-              
-              <div className="relative mb-4 sm:mb-6">
-                {deviceData.length > 0 ? (
-                  <>
-                    <ResponsiveContainer width="100%" height={160}>
-                      <PieChart>
-                        <Pie
-                          data={deviceData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={40}
-                          outerRadius={70}
-                          paddingAngle={2}
-                          dataKey="value"
-                        >
-                          {deviceData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip 
-                          contentStyle={{
-                            backgroundColor: 'rgba(30, 41, 59, 0.95)',
-                            border: '1px solid rgba(139, 92, 246, 0.3)',
-                            borderRadius: '8px',
-                            color: 'white'
-                          }}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                    
-                    {/* Device labels */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="flex flex-col items-center space-y-1 text-xs text-slate-300">
-                        {deviceData.slice(0, 4).map((device, index) => (
-                          <div key={index} className="flex items-center space-x-2">
-                            <div 
-                              className="w-2 h-2 rounded-full"
-                              style={{ backgroundColor: device.color }}
-                            />
-                            <span>{device.name}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex items-center justify-center h-48">
-                    <div className="text-center">
-                      <div className="text-slate-400 text-sm">No device data</div>
-                      <div className="text-slate-500 text-xs mt-1">Analytics will appear here once data is collected</div>
-                    </div>
-                  </div>
-                )}
-              </div>
-              
-              {/* Device breakdown */}
-              <div className="space-y-2 sm:space-y-3">
-                {deviceData.length > 0 ? deviceData.map((device, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 sm:p-3 bg-white/5 rounded-lg">
-                    <div className="flex items-center space-x-2 sm:space-x-3">
-                      <div className="p-1 sm:p-2 bg-white/10 rounded-lg">
-                        {device.name === 'Mobile' && <Smartphone className="h-3 w-3 sm:h-4 sm:w-4 text-blue-400" />}
-                        {device.name === 'Desktop' && <Monitor className="h-3 w-3 sm:h-4 sm:w-4 text-blue-400" />}
-                        {device.name === 'Tablet' && <Tablet className="h-3 w-3 sm:h-4 sm:w-4 text-blue-400" />}
-                        {!['Mobile', 'Desktop', 'Tablet'].includes(device.name) && <Monitor className="h-3 w-3 sm:h-4 sm:w-4 text-blue-400" />}
-                      </div>
-                      <span className="text-white font-medium text-xs sm:text-sm">{device.name}</span>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-white font-bold text-sm sm:text-base">{device.value}</div>
-                      <div className="text-xs text-slate-400">{device.percentage}%</div>
-                    </div>
-                  </div>
-                )) : (
-                  <div className="text-center py-4">
-                    <div className="text-slate-400 text-sm">No device data available</div>
-                  </div>
-                )}
-              </div>
-            </div>
+          <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+            <span>Smart Device Detection</span>
+            <span className="font-semibold text-indigo-600">
+              {activeDevices[0] ? `Primary: ${activeDevices[0].name} (${activeDevices[0].percentage}%)` : "Ready"}
+            </span>
+          </div>
+        </div>
 
-            {/* Geographic Distribution */}
-            <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/10">
-              <div className="flex items-center justify-between mb-4 sm:mb-6">
-                <h3 className="text-base sm:text-lg font-semibold text-white">Geographic Analytics</h3>
-                <button>
-                  <MoreHorizontal className="h-4 w-4 sm:h-5 sm:w-5 text-slate-400" />
-                </button>
-              </div>
-              
-              <div className="space-y-3 sm:space-y-4">
-                {geographicData.length > 0 ? geographicData.slice(0, 5).map((location, index) => (
-                  <div key={index} className="relative">
-                    <div className="flex items-center justify-between mb-2 sm:mb-3">
-                      <div className="flex items-center space-x-2 sm:space-x-3">
-                        <Globe className="h-3 w-3 sm:h-4 sm:w-4 text-emerald-400" />
-                        <div>
-                          <div className="text-white font-medium text-xs sm:text-sm">{location.country}</div>
-                          <div className="text-xs text-slate-400">#{index + 1} location</div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm sm:text-lg font-bold text-white">{location.clicks}</div>
-                        <div className="text-xs text-slate-400">{location.percentage}%</div>
-                      </div>
-                    </div>
-                    
-                    {/* Progress bar */}
-                    <div className="w-full bg-gray-800 rounded-full h-2 overflow-hidden">
-                      <div 
-                        className="h-2 rounded-full transition-all duration-1000 ease-out"
-                        style={{ 
-                          width: `${location.percentage}%`, 
-                          backgroundColor: location.color
-                        }}
-                      />
-                    </div>
-                  </div>
-                )) : (
-                  <div className="text-center py-4">
-                    <div className="text-slate-400 text-sm">No geographic data available</div>
-                  </div>
-                )}
-                
-                {/* Traffic Source Summary */}
-                <div className="pt-4 border-t border-white/10">
-                  <h4 className="text-sm font-semibold text-white mb-3">Top Referral Sources</h4>
-                  {trafficSources.length > 0 ? trafficSources.slice(0, 3).map((source, index) => (
-                    <div key={index} className="flex items-center justify-between py-2">
-                      <div className="flex items-center space-x-2">
-                        <div 
-                          className="w-2 h-2 rounded-full"
-                          style={{ backgroundColor: source.color }}
-                        />
-                        <span className="text-slate-300 text-sm">{source.name}</span>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-white font-semibold text-sm">{source.value}</div>
-                        <div className="text-xs text-slate-400">{source.percentage}%</div>
-                      </div>
-                    </div>
-                  )) : (
-                    <div className="text-center py-2">
-                      <div className="text-slate-400 text-sm">No referral data available</div>
-                    </div>
-                  )}
+        {/* Card 3: Browsers & Operating Systems */}
+        <div className="glass-card rounded-2xl p-6 flex flex-col justify-between border border-slate-200/90 shadow-sm hover:shadow-md transition-shadow">
+          <div>
+            {/* Card Header */}
+            <div className="flex items-start justify-between pb-4 mb-5 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-violet-50 border border-violet-100 flex items-center justify-center text-violet-600 shadow-xs">
+                  <Laptop className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-heading font-bold text-slate-900">Browsers & OS</h3>
+                  <p className="text-xs text-slate-500">Client software environment</p>
                 </div>
               </div>
+              <span className="px-2.5 py-1 rounded-full bg-violet-50 text-violet-700 border border-violet-200/60 text-[11px] font-bold">
+                {browsers.length} Browsers
+              </span>
             </div>
+
+            <div className="space-y-5">
+              {/* Top Browsers */}
+              <div>
+                <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2.5">
+                  <span>Top Browsers</span>
+                  <span>Share</span>
+                </div>
+                {browsers.length === 0 ? (
+                  <p className="text-xs text-slate-400 py-3 text-center bg-slate-50 rounded-xl">No browser data yet</p>
+                ) : (
+                  <div className="space-y-2">
+                    {browsers.slice(0, 4).map((b, i) => {
+                      const cleanBrowserName = b.name === "Unknown" ? "In-App / WebView" : b.name;
+                      return (
+                        <div
+                          key={i}
+                          className="p-2.5 bg-slate-50/80 hover:bg-white rounded-xl border border-slate-200/70 hover:border-violet-200 transition-all"
+                        >
+                          <div className="flex items-center justify-between text-xs mb-1.5">
+                            <span className="font-bold text-slate-800 flex items-center gap-2">
+                              <span className="w-2 h-2 rounded-full bg-violet-500" />
+                              {cleanBrowserName}
+                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <strong className="text-slate-900 font-extrabold">{b.clicks}</strong>
+                              <span className="px-1.5 py-0.5 rounded bg-violet-50 text-violet-700 font-bold text-[10px]">
+                                {b.percentage}%
+                              </span>
+                            </div>
+                          </div>
+                          <div className="w-full bg-slate-200/70 rounded-full h-1.5 overflow-hidden">
+                            <div
+                              className="h-1.5 rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 transition-all duration-500"
+                              style={{ width: `${Math.max(6, b.percentage)}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Operating Systems */}
+              <div className="pt-4 border-t border-slate-100">
+                <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2.5">
+                  <span>Operating Systems</span>
+                  <span>Share</span>
+                </div>
+                {operatingSystems.length === 0 ? (
+                  <p className="text-xs text-slate-400 py-3 text-center bg-slate-50 rounded-xl">No OS data yet</p>
+                ) : (
+                  <div className="space-y-2">
+                    {operatingSystems.slice(0, 4).map((os, i) => {
+                      const cleanOsName = os.name === "Unknown" ? "Other / Mobile OS" : os.name;
+                      return (
+                        <div
+                          key={i}
+                          className="p-2.5 bg-slate-50/80 hover:bg-white rounded-xl border border-slate-200/70 hover:border-indigo-200 transition-all"
+                        >
+                          <div className="flex items-center justify-between text-xs mb-1.5">
+                            <span className="font-bold text-slate-800 flex items-center gap-2">
+                              <span className="w-2 h-2 rounded-full bg-indigo-500" />
+                              {cleanOsName}
+                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <strong className="text-slate-900 font-extrabold">{os.clicks}</strong>
+                              <span className="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 font-bold text-[10px]">
+                                {os.percentage}%
+                              </span>
+                            </div>
+                          </div>
+                          <div className="w-full bg-slate-200/70 rounded-full h-1.5 overflow-hidden">
+                            <div
+                              className="h-1.5 rounded-full bg-gradient-to-r from-indigo-500 to-sky-500 transition-all duration-500"
+                              style={{ width: `${Math.max(6, os.percentage)}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+            <span>User-Agent Parser</span>
+            <span className="font-semibold text-violet-600">
+              {browsers[0] && operatingSystems[0]
+                ? `Top: ${browsers[0].name} · ${operatingSystems[0].name}`
+                : "Live Client"}
+            </span>
           </div>
         </div>
       </div>
+      )}
+
+      {/* Live Recent Activity Feed (Multi-Page Paginated System) */}
+      {analyticsViewTab === "logs" && (
+        <div className="glass-card rounded-2xl p-6 sm:p-7 animate-in fade-in duration-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+            <div>
+              <h3 className="text-base sm:text-xl font-heading font-bold text-slate-900 flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                Live Click Activity Log
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                Real-time stream of latest visits, locations, devices, smart routing, and bot-filter status
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5 text-xs sm:text-sm text-slate-500 font-medium">
+                <span>Rows:</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs sm:text-sm font-semibold text-slate-700 focus:outline-none focus:border-indigo-500"
+                >
+                  <option value={5}>5</option>
+                  <option value={6}>6</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                </select>
+              </div>
+              <span className="text-xs sm:text-sm font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 px-3 py-1 rounded-full">
+                {recentClicks.length} total events
+              </span>
+            </div>
+          </div>
+
+          {recentClicks.length === 0 ? (
+            <div className="text-center py-12 bg-slate-50 rounded-xl border border-slate-200/60">
+              <Clock className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+              <p className="text-sm font-semibold text-slate-700">No click events recorded yet</p>
+              <p className="text-xs text-slate-400 mt-1">
+                Open one of your short URLs in a new tab to see live tracking appear here immediately.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto rounded-xl border border-slate-200/80 bg-white">
+                <table className="w-full text-left border-collapse">
+                  <thead className="bg-slate-50 border-b border-slate-200/80">
+                    <tr className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      <th className="py-3 px-4">Link</th>
+                      <th className="py-3 px-4">Location</th>
+                      <th className="py-3 px-4">Device & Environment</th>
+                      <th className="py-3 px-4">Source / Route</th>
+                      <th className="py-3 px-4">Status</th>
+                      <th className="py-3 px-4 text-right">Time</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-xs sm:text-sm">
+                    {paginatedClicks.map((click) => (
+                      <tr key={click._id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="py-3 px-4 font-semibold text-slate-900 truncate max-w-[190px]">
+                          {click.linkName}
+                        </td>
+                        <td className="py-3 px-4 text-slate-600 whitespace-nowrap">
+                          <span className="font-semibold text-slate-800">{click.country}</span>
+                          {click.city && click.city !== "Unknown" ? `, ${click.city}` : ""}
+                        </td>
+                        <td className="py-3 px-4 text-slate-600 whitespace-nowrap">
+                          <span className="font-semibold text-slate-800">{click.deviceType}</span>
+                          {" · "}
+                          {click.browser} ({click.os})
+                        </td>
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-semibold text-xs">
+                            {click.referrerSource}
+                          </span>
+                          {click.qrLocationTag && (
+                            <span className="ml-1.5 px-2 py-0.5 rounded bg-pink-50 text-pink-700 text-xs font-semibold">
+                              QR: {click.qrLocationTag}
+                            </span>
+                          )}
+                          {click.routedTo && click.routedTo !== "primary" && (
+                            <span className="ml-1.5 px-2 py-0.5 rounded bg-violet-50 text-violet-700 text-xs font-semibold">
+                              {click.routedTo}
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          {click.isBot ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 font-semibold text-xs">
+                              Bot Filtered
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold text-xs">
+                              Verified Human
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 text-right text-slate-400 font-medium whitespace-nowrap">
+                          {formatTimeAgo(click.timestamp)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Multi-Pagination Footer Controls */}
+              {totalPages > 1 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-5 pt-3.5 border-t border-slate-100">
+                  <p className="text-xs sm:text-sm text-slate-500">
+                    Showing <span className="font-semibold text-slate-800">{startIndex + 1}</span> to{" "}
+                    <span className="font-semibold text-slate-800">
+                      {Math.min(startIndex + pageSize, recentClicks.length)}
+                    </span>{" "}
+                    of <span className="font-semibold text-slate-800">{recentClicks.length}</span> clicks
+                  </p>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={safePage === 1}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:pointer-events-none text-xs sm:text-sm font-semibold transition-colors"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      Prev
+                    </button>
+
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
+                        const isVisible =
+                          pageNum === 1 ||
+                          pageNum === totalPages ||
+                          Math.abs(pageNum - safePage) <= 1;
+
+                        if (!isVisible) {
+                          if (pageNum === 2 || pageNum === totalPages - 1) {
+                            return (
+                              <span key={pageNum} className="px-1.5 text-xs text-slate-400">
+                                ...
+                              </span>
+                            );
+                          }
+                          return null;
+                        }
+
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => setCurrentPage(pageNum)}
+                            className={`w-8 h-8 rounded-lg text-xs sm:text-sm font-bold transition-all ${
+                              safePage === pageNum
+                                ? "bg-indigo-600 text-white shadow-sm"
+                                : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <button
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={safePage === totalPages}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:pointer-events-none text-xs sm:text-sm font-semibold transition-colors"
+                    >
+                      Next
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }

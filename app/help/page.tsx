@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { Link2, HelpCircle, MessageCircle, Book, Mail, ExternalLink } from "lucide-react"
+import { Link2, HelpCircle, MessageCircle, Book, Mail, ExternalLink, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import Navigation from "@/components/Navigation"
 
@@ -94,46 +94,52 @@ export default function HelpPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-black to-slate-900">
+    <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-indigo-100 selection:text-indigo-900 flex flex-col">
       {/* Navigation */}
       <Navigation />
 
       {/* Header */}
-      <div className="text-center px-6 py-16">
-        <h1 className="text-5xl lg:text-7xl font-bold text-white mb-6">
-          Help Center
+      <div className="text-center px-6 py-16 sm:py-20 max-w-4xl mx-auto">
+        <h1 className="text-4xl sm:text-6xl font-heading font-extrabold text-slate-900 mb-5 tracking-tight">
+          Help <span className="gradient-text">Center</span>
         </h1>
-        <p className="text-xl text-purple-200 mb-12 max-w-3xl mx-auto">
-          Get answers to common questions and learn how to make the most of LinkHub's features.
+        <p className="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
+          Find fast answers to common questions and learn how to get the most out of your links.
         </p>
       </div>
 
       {/* Quick Help Cards */}
-      <div className="max-w-6xl mx-auto px-6 pb-12">
+      <div className="max-w-6xl mx-auto px-6 pb-12 w-full">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-          <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 text-center">
-            <Book className="h-12 w-12 text-purple-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-white mb-2">User Guide</h3>
-            <p className="text-gray-300 mb-4">Learn how to use all LinkHub features effectively</p>
-            <Link href="#faq" className="text-purple-400 hover:text-purple-300 transition-colors">
+          <div className="glass-card rounded-2xl p-7 text-center card-hover flex flex-col items-center">
+            <div className="w-12 h-12 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 mb-4">
+              <Book className="h-6 w-6" />
+            </div>
+            <h3 className="text-lg font-heading font-bold text-slate-900 mb-2">User Guide</h3>
+            <p className="text-slate-600 text-sm mb-5 leading-relaxed">Learn how to make the most of all LinkHub tools</p>
+            <Link href="#faq" className="mt-auto text-sm font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1">
               Browse FAQ →
             </Link>
           </div>
           
-          <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 text-center">
-            <MessageCircle className="h-12 w-12 text-blue-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-white mb-2">Contact Support</h3>
-            <p className="text-gray-300 mb-4">Get direct help from our support team</p>
-            <a href="mailto:support@linkhub.dev" className="text-blue-400 hover:text-blue-300 transition-colors">
+          <div className="glass-card rounded-2xl p-7 text-center card-hover flex flex-col items-center">
+            <div className="w-12 h-12 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 mb-4">
+              <MessageCircle className="h-6 w-6" />
+            </div>
+            <h3 className="text-lg font-heading font-bold text-slate-900 mb-2">Contact Support</h3>
+            <p className="text-slate-600 text-sm mb-5 leading-relaxed">Get direct assistance from our development team</p>
+            <a href="mailto:support@linkhub.dev" className="mt-auto text-sm font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1">
               Email Support →
             </a>
           </div>
           
-          <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 text-center">
-            <ExternalLink className="h-12 w-12 text-green-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-white mb-2">Quick Start</h3>
-            <p className="text-gray-300 mb-4">Jump right in and create your first link</p>
-            <Link href="/signup" className="text-green-400 hover:text-green-300 transition-colors">
+          <div className="glass-card rounded-2xl p-7 text-center card-hover flex flex-col items-center">
+            <div className="w-12 h-12 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 mb-4">
+              <ExternalLink className="h-6 w-6" />
+            </div>
+            <h3 className="text-lg font-heading font-bold text-slate-900 mb-2">Quick Start</h3>
+            <p className="text-slate-600 text-sm mb-5 leading-relaxed">Jump right in and create your first short URL</p>
+            <Link href="/signup" className="mt-auto text-sm font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1">
               Get Started →
             </Link>
           </div>
@@ -141,22 +147,22 @@ export default function HelpPage() {
       </div>
 
       {/* FAQ Section */}
-      <div id="faq" className="max-w-4xl mx-auto px-6 pb-20">
-        <h2 className="text-4xl font-bold text-white text-center mb-12">Frequently Asked Questions</h2>
+      <div id="faq" className="max-w-4xl mx-auto px-6 pb-20 w-full">
+        <h2 className="text-3xl font-heading font-extrabold text-slate-900 text-center mb-12 tracking-tight">Frequently Asked Questions</h2>
         
-        <div className="space-y-8">
+        <div className="space-y-10">
           {faqData.map((category, categoryIndex) => (
             <div key={categoryIndex}>
-              <h3 className="text-2xl font-semibold text-purple-300 mb-6 flex items-center">
-                <HelpCircle className="h-6 w-6 mr-2" />
+              <h3 className="text-xl font-heading font-bold text-indigo-600 mb-4 flex items-center gap-2">
+                <HelpCircle className="h-5 w-5" />
                 {category.category}
               </h3>
               
-              <div className="space-y-4">
+              <div className="space-y-3.5">
                 {category.questions.map((item, questionIndex) => (
-                  <div key={questionIndex} className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
-                    <h4 className="text-lg font-semibold text-white mb-3">{item.q}</h4>
-                    <p className="text-gray-300 leading-relaxed">{item.a}</p>
+                  <div key={questionIndex} className="glass-card rounded-2xl p-6">
+                    <h4 className="text-base font-heading font-bold text-slate-900 mb-2">{item.q}</h4>
+                    <p className="text-slate-600 text-sm leading-relaxed">{item.a}</p>
                   </div>
                 ))}
               </div>
@@ -166,23 +172,26 @@ export default function HelpPage() {
       </div>
 
       {/* Contact Section */}
-      <div className="max-w-4xl mx-auto px-6 pb-20">
-        <div className="bg-gradient-to-r from-purple-600/20 to-blue-600/20 rounded-3xl p-8 border border-white/10 text-center">
-          <Mail className="h-12 w-12 text-purple-400 mx-auto mb-4" />
-          <h2 className="text-3xl font-bold text-white mb-4">Still Need Help?</h2>
-          <p className="text-purple-200 mb-6 max-w-2xl mx-auto">
-            Can't find what you're looking for? Our support team is here to help you get the most out of LinkHub.
+      <div className="max-w-4xl mx-auto px-6 pb-20 w-full">
+        <div className="bg-white rounded-3xl p-8 sm:p-12 border border-slate-200 shadow-xl shadow-slate-200/50 text-center">
+          <div className="w-12 h-12 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 mx-auto mb-4">
+            <Mail className="h-6 w-6" />
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-heading font-bold text-slate-900 mb-3 tracking-tight">Still Need Help?</h2>
+          <p className="text-slate-600 mb-8 max-w-xl mx-auto text-sm sm:text-base leading-relaxed">
+            Can't find what you're looking for? Reach out and we'll help you get sorted out quickly.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3.5 justify-center">
             <a
               href="mailto:support@linkhub.dev"
-              className="inline-block px-8 py-4 bg-white text-purple-900 rounded-xl font-semibold text-lg hover:bg-purple-50 transition-all duration-300"
+              className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-indigo-600 text-white rounded-xl font-semibold text-sm hover:bg-indigo-700 active:scale-[0.98] transition-all shadow-md shadow-indigo-600/20"
             >
               Email Support
+              <ArrowRight className="w-4 h-4" />
             </a>
             <Link
               href="/"
-              className="inline-block px-8 py-4 border border-white/30 text-white rounded-xl font-semibold text-lg hover:bg-white/10 transition-all duration-300"
+              className="inline-flex items-center justify-center px-7 py-3.5 bg-white border border-slate-200 text-slate-700 hover:text-slate-900 rounded-xl font-semibold text-sm hover:bg-slate-50 transition-all shadow-sm"
             >
               Back to Home
             </Link>

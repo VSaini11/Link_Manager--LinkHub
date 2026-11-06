@@ -95,8 +95,37 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// DELETE - Delete a specific link (you already have this, but here's an improved version)
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+// PATCH - Update link destination (Dynamic QR editing), Smart Routing, A/B Test, Fallback URL, Affiliate, or Lead Capture
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    await dbConnect();
+    const sessionId = request.cookies.get("session")?.value;
+    if (!sessionId) {
+      return NextResponse.json({ message: "Not authenticated" }, { status: 401 });
+    }
+
+    const { id } = await params;
+    const body = await request.json();
+
+    const updatedLink = await Link.findOneAndUpdate(
+      { _id: id, userId: sessionId },
+      { $set: body },
+      { new: true }
+    );
+
+    if (!updatedLink) {
+      return NextResponse.json({ message: "Link not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(updatedLink);
+  } catch (error) {
+    console.error("Error updating link:", error);
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+  }
+}
+
+// DELETE - Delete a specific link
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await dbConnect();
 
@@ -106,8 +135,10 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       return NextResponse.json({ message: "Not authenticated" }, { status: 401 });
     }
 
+    const { id } = await params;
+
     const deletedLink = await Link.findOneAndDelete({
-      _id: params.id,
+      _id: id,
       userId: sessionId, // Ensure user can only delete their own links
     });
 

@@ -49,29 +49,19 @@ export default function ReviewForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (formData.rating === 0) {
+      toast({
+        title: "Rating Required",
+        description: "Please select a star rating between 1 and 5.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      // Validate form
-      if (!formData.name || !formData.email || !formData.rating || !formData.title || !formData.content) {
-        toast({
-          title: "Missing Information",
-          description: "Please fill in all required fields.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (formData.rating < 1 || formData.rating > 5) {
-        toast({
-          title: "Invalid Rating",
-          description: "Please select a rating between 1 and 5 stars.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Submit to API
       const response = await fetch('/api/reviews', {
         method: 'POST',
         headers: {
@@ -106,43 +96,41 @@ export default function ReviewForm() {
 
   if (isSubmitted) {
     return (
-      <Card className="text-center p-8 bg-slate-800 border-slate-700">
-        <CardContent className="space-y-4">
-          <CheckCircle className="h-16 w-16 text-green-400 mx-auto" />
-          <h3 className="text-xl font-semibold text-white">Thank You!</h3>
-          <p className="text-slate-300">
-            Your review has been submitted successfully. It will be published after our moderation process.
-          </p>
-          <Button 
-            onClick={() => setIsSubmitted(false)} 
-            variant="outline"
-            className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white hover:border-slate-500"
-          >
-            Write Another Review
-          </Button>
-        </CardContent>
-      </Card>
+      <div className="text-center p-8 bg-slate-50 rounded-2xl border border-slate-200 space-y-4">
+        <CheckCircle className="h-14 w-14 text-emerald-500 mx-auto" />
+        <h3 className="text-xl font-heading font-bold text-slate-900">Thank You!</h3>
+        <p className="text-slate-600 text-sm max-w-sm mx-auto">
+          Your review has been submitted successfully. It will be published after brief moderation.
+        </p>
+        <Button 
+          onClick={() => setIsSubmitted(false)} 
+          variant="outline"
+          className="border-slate-300 text-slate-700 hover:bg-slate-100"
+        >
+          Write Another Review
+        </Button>
+      </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-5 text-left">
       {/* Personal Information */}
       <div className="grid md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="name" className="text-white">Name *</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="name" className="text-xs font-semibold text-slate-700 uppercase tracking-wider">Name *</Label>
           <Input
             id="name"
             name="name"
             value={formData.name}
             onChange={handleInputChange}
             placeholder="Your full name"
-            className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-purple-500"
+            className="bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-indigo-600 focus:ring-indigo-500/20"
             required
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="email" className="text-white">Email *</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="email" className="text-xs font-semibold text-slate-700 uppercase tracking-wider">Email *</Label>
           <Input
             id="email"
             name="email"
@@ -150,55 +138,55 @@ export default function ReviewForm() {
             value={formData.email}
             onChange={handleInputChange}
             placeholder="your@email.com"
-            className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-purple-500"
+            className="bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-indigo-600 focus:ring-indigo-500/20"
             required
           />
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="company" className="text-white">Company (Optional)</Label>
+      <div className="space-y-1.5">
+        <Label htmlFor="company" className="text-xs font-semibold text-slate-700 uppercase tracking-wider">Company (Optional)</Label>
         <Input
           id="company"
           name="company"
           value={formData.company}
           onChange={handleInputChange}
-          placeholder="Your company or organization"
-          className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-purple-500"
+          placeholder="Your company or project"
+          className="bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-indigo-600 focus:ring-indigo-500/20"
         />
       </div>
 
       {/* Rating */}
-      <div className="space-y-2">
-        <Label className="text-white">Rating *</Label>
-        <div className="flex items-center gap-2">
+      <div className="space-y-1.5">
+        <Label className="text-xs font-semibold text-slate-700 uppercase tracking-wider">Rating *</Label>
+        <div className="flex items-center gap-1.5 pt-1">
           {[1, 2, 3, 4, 5].map((star) => (
             <button
               key={star}
               type="button"
               onClick={() => handleRatingClick(star)}
-              className="p-1 hover:scale-110 transition-transform"
+              className="p-1 hover:scale-110 transition-transform focus:outline-none"
             >
               <Star
-                className={`h-8 w-8 ${
+                className={`h-7 w-7 ${
                   star <= formData.rating
-                    ? 'text-yellow-400 fill-yellow-400'
-                    : 'text-slate-400 hover:text-yellow-300'
+                    ? 'text-amber-400 fill-amber-400'
+                    : 'text-slate-300 hover:text-amber-300'
                 }`}
               />
             </button>
           ))}
           {formData.rating > 0 && (
-            <span className="ml-2 text-sm text-slate-400">
-              {formData.rating} out of 5 stars
+            <span className="ml-3 text-xs font-semibold text-slate-600">
+              {formData.rating} of 5 stars
             </span>
           )}
         </div>
       </div>
 
       {/* Review Title */}
-      <div className="space-y-2">
-        <Label htmlFor="title" className="text-white">Review Title *</Label>
+      <div className="space-y-1.5">
+        <Label htmlFor="title" className="text-xs font-semibold text-slate-700 uppercase tracking-wider">Review Title *</Label>
         <Input
           id="title"
           name="title"
@@ -206,38 +194,31 @@ export default function ReviewForm() {
           onChange={handleInputChange}
           placeholder="Summarize your experience"
           maxLength={200}
-          className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-purple-500"
+          className="bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-indigo-600 focus:ring-indigo-500/20"
           required
         />
-        <p className="text-xs text-slate-400">
-          {formData.title.length}/200 characters
-        </p>
       </div>
 
       {/* Review Content */}
-      <div className="space-y-2">
-        <Label htmlFor="content" className="text-white">Your Review *</Label>
+      <div className="space-y-1.5">
+        <Label htmlFor="content" className="text-xs font-semibold text-slate-700 uppercase tracking-wider">Your Review *</Label>
         <Textarea
           id="content"
           name="content"
           value={formData.content}
           onChange={handleInputChange}
-          placeholder="Share your experience with LinkHub. What did you like? How did it help your business?"
-          rows={5}
+          placeholder="What do you think of LinkHub? How does it help your workflows?"
+          rows={4}
           maxLength={1000}
-          className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-purple-500"
+          className="bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-indigo-600 focus:ring-indigo-500/20"
           required
         />
-        <p className="text-xs text-slate-400">
-          {formData.content.length}/1000 characters
-        </p>
       </div>
 
       {/* Terms */}
-      <div className="text-xs text-slate-400 bg-slate-700 border border-slate-600 p-3 rounded-lg">
+      <div className="text-xs text-slate-500 bg-slate-50 border border-slate-200 p-3 rounded-xl">
         <p>
-          By submitting this review, you agree that your feedback may be published on our website. 
-          We reserve the right to moderate reviews for inappropriate content. Your email will not be displayed publicly.
+          By submitting, you agree that your review may be displayed publicly. Your email is kept private and never shown.
         </p>
       </div>
 
@@ -245,12 +226,12 @@ export default function ReviewForm() {
       <Button 
         type="submit" 
         disabled={isSubmitting} 
-        className="w-full bg-white text-purple-900 hover:bg-purple-50 font-semibold"
+        className="w-full bg-indigo-600 text-white hover:bg-indigo-700 font-semibold py-3 rounded-xl shadow-md shadow-indigo-600/20 transition-all active:scale-[0.98]"
       >
         {isSubmitting ? (
           <>
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            Submitting Review...
+            Submitting...
           </>
         ) : (
           'Submit Review'

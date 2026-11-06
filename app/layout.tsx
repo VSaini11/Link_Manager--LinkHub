@@ -1,10 +1,21 @@
 import type React from "react"
 import type { Metadata, Viewport } from "next"
-import { Inter } from "next/font/google"
+import { Inter, Plus_Jakarta_Sans } from "next/font/google"
 import "./globals.css"
 import { Toaster } from "@/components/ui/toaster"
 
-const inter = Inter({ subsets: ["latin"], display: "swap" })
+const inter = Inter({ 
+  subsets: ["latin"], 
+  display: "swap",
+  variable: "--font-inter",
+})
+
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-heading",
+  weight: ["500", "600", "700", "800"],
+})
 
 export const metadata: Metadata = {
   title: {
@@ -212,7 +223,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.className} antialiased`}>
+      <body className={`${inter.variable} ${plusJakartaSans.variable} font-sans antialiased bg-slate-50 text-slate-900 min-h-screen selection:bg-indigo-100 selection:text-indigo-900`}>
         {children}
         <Toaster />
       </body>

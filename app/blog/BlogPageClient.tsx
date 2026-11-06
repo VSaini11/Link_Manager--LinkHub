@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { CalendarDays, Clock, Eye, Search, Tag, FileText, Sparkles, TrendingUp } from 'lucide-react';
+import { Search, CalendarDays, Clock, Eye, Sparkles, TrendingUp, Tag, FileText, ArrowRight } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 
 interface BlogPost {
@@ -15,116 +15,114 @@ interface BlogPost {
   title: string;
   slug: string;
   excerpt: string;
-  content: string;
-  author: string;
+  content?: string;
   category: string;
   tags: string[];
-  featured: boolean;
   readTime: number;
-  views: number;
-  likes: number;
   publishedAt: string;
-  createdAt: string;
+  featured?: boolean;
+  views?: number;
 }
 
 interface BlogData {
   posts: BlogPost[];
   categories: string[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    pages: number;
-  };
 }
 
-// Format date helper
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  });
-};
-
-interface BlogPageClientProps {
-  initialData: BlogData;
-}
-
-export default function BlogPageClient({ initialData }: BlogPageClientProps) {
+export default function BlogPageClient({ initialData }: { initialData: BlogData }) {
   const [blogData, setBlogData] = useState<BlogData>(initialData);
-  const [loading, setLoading] = useState(false);
-  const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
-  const [selectedPostContent, setSelectedPostContent] = useState<string>('');
-  const [loadingContent, setLoadingContent] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
+  const [selectedPostContent, setSelectedPostContent] = useState<string>('');
+  const [loading, setLoading] = useState(false);
+  const [loadingContent, setLoadingContent] = useState(false);
 
-  // Handle post content loading for modal
+  const fetchPosts = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (selectedCategory !== 'All') params.append('category', selectedCategory);
+      if (searchTerm) params.append('search', searchTerm);
+
+      const response = await fetch(`/api/blog?${params.toString()}`);
+      if (response.ok) {
+        const data = await response.json();
+        setBlogData(prev => ({ ...prev, posts: data.posts }));
+      }
+    } catch (error) {
+      console.error('Error fetching blog posts:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchPosts();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm, selectedCategory]);
+
   const handleReadMore = async (post: BlogPost) => {
     setSelectedPost(post);
     setLoadingContent(true);
-    
     try {
       const response = await fetch(`/api/blog/${post.slug}`);
       if (response.ok) {
         const data = await response.json();
         setSelectedPostContent(data.post.content);
-      } else {
-        setSelectedPostContent('<p>Error loading content. Please try again.</p>');
       }
     } catch (error) {
-      console.error('Error loading post content:', error);
-      setSelectedPostContent('<p>Error loading content. Please try again.</p>');
+      console.error('Error fetching post content:', error);
+      setSelectedPostContent('<p>Error loading content.</p>');
     } finally {
       setLoadingContent(false);
     }
   };
 
-  // Filter posts based on search and category
-  const filteredPosts = blogData.posts.filter((post: BlogPost) => {
-    const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         post.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         post.tags.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesCategory = selectedCategory === 'All' || post.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
 
+  const filteredPosts = blogData.posts;
   const featuredPosts = filteredPosts.filter((post: BlogPost) => post.featured);
   const recentPosts = filteredPosts.filter((post: BlogPost) => !post.featured);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-black to-slate-900">
+    <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-indigo-100 selection:text-indigo-900 flex flex-col">
       <Navigation />
       
-      <div className="max-w-7xl mx-auto px-4 py-20">
+      <div className="max-w-7xl mx-auto px-4 py-16 sm:py-20 w-full">
         {/* Header */}
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center justify-center p-3 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full mb-6 border border-purple-500/30">
-            <FileText className="h-8 w-8 text-purple-300" />
+        <div className="text-center mb-14 max-w-3xl mx-auto">
+          <div className="inline-flex items-center justify-center p-3 bg-indigo-50 rounded-2xl mb-5 border border-indigo-100 text-indigo-600 shadow-sm">
+            <FileText className="h-6 w-6" />
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
+          <h1 className="text-4xl md:text-6xl font-heading font-extrabold text-slate-900 mb-5 tracking-tight">
             LinkHub <span className="gradient-text">Blog</span>
           </h1>
-          <p className="text-xl text-purple-200 max-w-3xl mx-auto mb-8">
-            Discover expert insights on URL shortening, link analytics, digital marketing 
-            strategies, and SEO optimization to maximize your link performance.
+          <p className="text-lg text-slate-600 leading-relaxed mb-8">
+            Insights on link management, analytics tracking, SEO strategies, and digital branding.
           </p>
-          <Button asChild size="lg" className="bg-white text-purple-900 hover:bg-purple-50 font-semibold px-8 py-4 rounded-xl shadow-lg hover:shadow-purple-300 transition-all duration-300">
-            <Link href="/blog/submit">Submit Your Blog Post</Link>
+          <Button asChild size="lg" className="bg-indigo-600 text-white hover:bg-indigo-700 font-semibold px-7 py-3 rounded-xl shadow-md shadow-indigo-600/20">
+            <Link href="/blog/submit">Submit a Guest Post</Link>
           </Button>
         </div>
 
         {/* Search and Filter */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 p-6 mb-12">
-          <div className="flex flex-col md:flex-row gap-4">
+        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-5 sm:p-6 mb-12 max-w-4xl mx-auto">
+          <div className="flex flex-col md:flex-row gap-3.5">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-300 h-4 w-4" />
+              <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
               <Input
                 type="text"
                 placeholder="Search articles..."
-                className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-purple-300 focus:border-purple-400 focus:ring-purple-400"
+                className="pl-10 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-indigo-600"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -134,7 +132,7 @@ export default function BlogPageClient({ initialData }: BlogPageClientProps) {
                 variant={selectedCategory === 'All' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setSelectedCategory('All')}
-                className={selectedCategory === 'All' ? 'bg-white text-purple-900 hover:bg-purple-50' : 'border-white/30 text-white hover:bg-white/10 hover:text-white'}
+                className={selectedCategory === 'All' ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}
               >
                 All
               </Button>
@@ -144,7 +142,7 @@ export default function BlogPageClient({ initialData }: BlogPageClientProps) {
                   variant={selectedCategory === category ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setSelectedCategory(category)}
-                  className={selectedCategory === category ? 'bg-white text-purple-900 hover:bg-purple-50' : 'border-white/30 text-white hover:bg-white/10 hover:text-white'}
+                  className={selectedCategory === category ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}
                 >
                   {category}
                 </Button>
@@ -155,57 +153,52 @@ export default function BlogPageClient({ initialData }: BlogPageClientProps) {
 
         {loading ? (
           <div className="text-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="text-gray-600 mt-4">Loading articles...</p>
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600 mx-auto"></div>
+            <p className="text-slate-500 text-sm mt-4">Loading articles...</p>
           </div>
         ) : (
           <>
             {/* Featured Posts */}
             {featuredPosts.length > 0 && (
-              <section className="mb-16">
-                <div className="flex items-center justify-between mb-8">
-                  <h2 className="text-3xl font-bold text-white flex items-center gap-3">
-                    <Sparkles className="h-8 w-8 text-purple-400" />
+              <section className="mb-14">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-heading font-bold text-slate-900 flex items-center gap-2">
+                    <Sparkles className="h-6 w-6 text-amber-500" />
                     Featured Articles
                   </h2>
-                  <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-none">Featured</Badge>
                 </div>
-                <div className="grid lg:grid-cols-2 gap-8">
+                <div className="grid lg:grid-cols-2 gap-6">
                   {featuredPosts.map((post) => (
-                    <Card key={post._id} className="overflow-hidden hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-300 group border border-white/20 bg-white/10 backdrop-blur-lg hover:bg-white/15">
-                      <CardHeader className="pb-4">
-                        <div className="flex items-center gap-2 mb-3">
-                          <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">{post.category}</Badge>
-                          <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-none">Featured</Badge>
+                    <Card key={post._id} className="overflow-hidden glass-card rounded-2xl card-hover border border-slate-200 bg-white">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge className="bg-indigo-50 text-indigo-700 border-indigo-100">{post.category}</Badge>
+                          <Badge className="bg-amber-100 text-amber-800 border-none">Featured</Badge>
                         </div>
-                        <CardTitle className="text-xl text-white hover:text-purple-300 transition-colors">
+                        <CardTitle className="text-xl font-heading font-bold text-slate-900 hover:text-indigo-600 transition-colors">
                           <Link href={`/blog/${post.slug}`}>
                             {post.title}
                           </Link>
                         </CardTitle>
-                        <CardDescription className="text-purple-200 line-clamp-3">
+                        <CardDescription className="text-slate-600 line-clamp-2 text-sm leading-relaxed">
                           {post.excerpt}
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="pt-0">
-                        <div className="flex items-center justify-between text-sm text-purple-300 mb-4">
+                        <div className="flex items-center justify-between text-xs text-slate-400 mb-4">
                           <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-1">
+                            <span className="flex items-center gap-1">
                               <CalendarDays className="h-3 w-3" />
                               {formatDate(post.publishedAt)}
-                            </div>
-                            <div className="flex items-center gap-1">
+                            </span>
+                            <span className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />
-                              {post.readTime} min
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Eye className="h-3 w-3" />
-                              {post.views?.toLocaleString() || 0}
-                            </div>
+                              {post.readTime} min read
+                            </span>
                           </div>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <Button asChild className="bg-white text-purple-900 hover:bg-purple-50 font-semibold">
+                        <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                          <Button asChild className="bg-indigo-600 text-white hover:bg-indigo-700 font-semibold text-xs py-1.5 h-8">
                             <Link href={`/blog/${post.slug}`}>
                               Read Article
                             </Link>
@@ -215,54 +208,36 @@ export default function BlogPageClient({ initialData }: BlogPageClientProps) {
                               <Button 
                                 variant="outline" 
                                 size="sm"
-                                className="border-white/30 text-white hover:bg-white/10 hover:text-white"
+                                className="border-slate-200 text-slate-700 hover:bg-slate-50 text-xs h-8"
                                 onClick={() => handleReadMore(post)}
                               >
-                                Quick Preview
+                                Preview
                               </Button>
                             </DialogTrigger>
-                            <DialogContent className="max-w-5xl max-h-[85vh] overflow-hidden modal-content bg-slate-900/95 backdrop-blur-lg border-purple-500/30 shadow-2xl shadow-purple-500/20">
-                              <DialogHeader className="border-b border-purple-500/30 pb-4">
-                                <DialogTitle className="text-white text-xl">
+                            <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden modal-content bg-white border-slate-200 shadow-2xl">
+                              <DialogHeader className="border-b border-slate-100 pb-4 text-left">
+                                <DialogTitle className="text-slate-900 text-xl font-heading font-bold">
                                   {selectedPost?.title}
                                 </DialogTitle>
-                                <DialogDescription className="text-purple-200">
+                                <DialogDescription className="text-slate-500">
                                   {selectedPost?.excerpt}
                                 </DialogDescription>
                               </DialogHeader>
-                              <div className="flex-1 overflow-y-auto p-6 bg-slate-900/95">
+                              <div className="flex-1 overflow-y-auto p-6 max-h-[55vh]">
                                 {loadingContent ? (
                                   <div className="flex items-center justify-center py-8">
-                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-400"></div>
-                                    <span className="ml-3 text-purple-200">Loading content...</span>
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
                                   </div>
                                 ) : (
                                   <div 
-                                    className="prose prose-invert prose-purple max-w-none prose-headings:text-white prose-p:text-purple-100 prose-li:text-purple-100 prose-strong:text-white"
+                                    className="prose prose-slate max-w-none text-slate-700"
                                     dangerouslySetInnerHTML={{ __html: selectedPostContent }}
                                   />
                                 )}
                               </div>
-                              <div className="border-t border-purple-500/30 pt-4 flex justify-end">
-                                <Button asChild className="bg-white text-purple-900 hover:bg-purple-50 font-semibold">
-                                  <Link href={`/blog/${selectedPost?.slug}`}>
-                                    Read Full Article
-                                  </Link>
-                                </Button>
-                              </div>
                             </DialogContent>
                           </Dialog>
                         </div>
-                        {post.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-4">
-                            {post.tags.slice(0, 3).map((tag) => (
-                              <Badge key={tag} className="bg-purple-500/20 text-purple-300 border-purple-500/30">
-                                <Tag className="h-2 w-2 mr-1" />
-                                {tag}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
                       </CardContent>
                     </Card>
                   ))}
@@ -272,22 +247,22 @@ export default function BlogPageClient({ initialData }: BlogPageClientProps) {
 
             {/* Recent Posts */}
             <section>
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="text-3xl font-bold text-white flex items-center gap-3">
-                  <TrendingUp className="h-8 w-8 text-purple-400" />
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-heading font-bold text-slate-900 flex items-center gap-2">
+                  <TrendingUp className="h-6 w-6 text-indigo-600" />
                   {searchTerm || selectedCategory !== 'All' ? 'Filtered Articles' : 'Latest Articles'}
                 </h2>
-                <Badge className="bg-white/10 text-white border-white/30">
+                <Badge variant="secondary" className="bg-slate-100 text-slate-700">
                   {filteredPosts.length} {filteredPosts.length === 1 ? 'article' : 'articles'}
                 </Badge>
               </div>
 
               {recentPosts.length === 0 ? (
-                <div className="text-center py-16 bg-white/10 backdrop-blur-lg rounded-xl border border-white/20">
-                  <FileText className="h-16 w-16 text-purple-300 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-white mb-2">No articles found</h3>
-                  <p className="text-purple-200 mb-6">
-                    {searchTerm ? 'Try adjusting your search terms' : 'No articles match the selected filters'}
+                <div className="text-center py-16 bg-white rounded-2xl border border-slate-200">
+                  <FileText className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                  <h3 className="text-lg font-heading font-bold text-slate-900 mb-1">No articles found</h3>
+                  <p className="text-slate-500 text-sm mb-4">
+                    {searchTerm ? 'Try adjusting your search criteria' : 'No articles match the selected category'}
                   </p>
                   {(searchTerm || selectedCategory !== 'All') && (
                     <Button 
@@ -302,51 +277,30 @@ export default function BlogPageClient({ initialData }: BlogPageClientProps) {
                   )}
                 </div>
               ) : (
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {recentPosts.map((post) => (
-                    <Card key={post._id} className="overflow-hidden hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-300 group border border-white/20 bg-white/10 backdrop-blur-lg hover:bg-white/15">
-                      <CardHeader>
-                        <Badge className="w-fit mb-2 bg-purple-500/20 text-purple-300 border-purple-500/30">{post.category}</Badge>
-                        <CardTitle className="text-lg text-white hover:text-purple-300 transition-colors line-clamp-2">
+                    <Card key={post._id} className="overflow-hidden glass-card rounded-2xl card-hover border border-slate-200 bg-white flex flex-col justify-between">
+                      <CardHeader className="pb-2">
+                        <Badge className="w-fit mb-2 bg-indigo-50 text-indigo-700 border-indigo-100">{post.category}</Badge>
+                        <CardTitle className="text-base font-heading font-bold text-slate-900 hover:text-indigo-600 transition-colors line-clamp-2">
                           <Link href={`/blog/${post.slug}`}>
                             {post.title}
                           </Link>
                         </CardTitle>
-                        <CardDescription className="text-purple-200 line-clamp-3">
+                        <CardDescription className="text-slate-600 line-clamp-3 text-xs leading-relaxed">
                           {post.excerpt}
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
-                        <div className="flex items-center justify-between text-xs text-purple-300 mb-4">
-                          <div className="flex items-center gap-1">
-                            <CalendarDays className="h-3 w-3" />
-                            {formatDate(post.publishedAt)}
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              {post.readTime}m
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Eye className="h-3 w-3" />
-                              {post.views?.toLocaleString() || 0}
-                            </div>
-                          </div>
+                        <div className="flex items-center justify-between text-xs text-slate-400 mb-4 pt-2">
+                          <span>{formatDate(post.publishedAt)}</span>
+                          <span>{post.readTime} min read</span>
                         </div>
-                        <Button asChild size="sm" className="w-full bg-white text-purple-900 hover:bg-purple-50 font-semibold">
+                        <Button asChild size="sm" className="w-full bg-slate-900 text-white hover:bg-slate-800 font-semibold text-xs">
                           <Link href={`/blog/${post.slug}`}>
-                            Read More
+                            Read Story
                           </Link>
                         </Button>
-                        {post.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-3">
-                            {post.tags.slice(0, 2).map((tag) => (
-                              <Badge key={tag} className="bg-white/10 text-purple-300 border-white/30 text-xs">
-                                {tag}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
                       </CardContent>
                     </Card>
                   ))}
@@ -357,15 +311,15 @@ export default function BlogPageClient({ initialData }: BlogPageClientProps) {
         )}
 
         {/* CTA Section */}
-        <section className="mt-20 p-8 bg-blue-50 rounded-xl text-center">
-          <h3 className="text-2xl font-bold text-gray-900 mb-4">
-            Start shortening your links today
+        <section className="mt-20 p-8 sm:p-12 bg-white rounded-3xl border border-slate-200 shadow-sm text-center">
+          <h3 className="text-2xl sm:text-3xl font-heading font-bold text-slate-900 mb-3">
+            Start shortening links for free today
           </h3>
-          <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-            Join thousands of users who trust LinkHub for their URL shortening and link management needs.
+          <p className="text-slate-600 mb-6 max-w-xl mx-auto text-sm sm:text-base">
+            Join thousands of marketers and developers who rely on LinkHub for crisp link management.
           </p>
-          <Button asChild size="lg">
-            <Link href="/">Get Started Free</Link>
+          <Button asChild size="lg" className="bg-indigo-600 text-white hover:bg-indigo-700 font-semibold px-8 py-3 rounded-xl shadow-md shadow-indigo-600/20">
+            <Link href="/signup">Get Started Free</Link>
           </Button>
         </section>
       </div>
