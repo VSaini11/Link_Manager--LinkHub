@@ -18,7 +18,6 @@ const nextConfig = {
   },
   // Enable experimental features for better SEO
   experimental: {
-    optimizeCss: true,
     scrollRestoration: true,
   },
   // Compress responses
