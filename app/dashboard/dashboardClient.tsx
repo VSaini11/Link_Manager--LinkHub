@@ -260,13 +260,24 @@ export default function DashboardClient({ user }: DashboardClientProps = {}) {
 
   const handleDeleteLink = async (id: string) => {
     if (!confirm("Are you sure you want to delete this link?")) return;
+    
+    // 1. Instantly remove from UI for fast responsive feel (optimistic update)
+    const previousLinks = [...links];
+    setLinks((prev) => prev.filter((l) => l._id !== id));
+
     try {
       const res = await fetch(`/api/links/${id}`, { method: "DELETE" });
-      if (res.ok) {
-        setLinks((prev) => prev.filter((l) => l._id !== id));
+      if (!res.ok) {
+        // If server failed (and not 404 meaning already deleted), restore link
+        if (res.status !== 404) {
+          const err = await res.json().catch(() => ({}));
+          alert(err.message || "Failed to delete link on server");
+          setLinks(previousLinks);
+        }
       }
     } catch (err) {
       alert("Error deleting link");
+      setLinks(previousLinks);
     }
   };
 

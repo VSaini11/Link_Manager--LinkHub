@@ -137,14 +137,19 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
 
     const { id } = await params;
 
-    const deletedLink = await Link.findOneAndDelete({
-      _id: id,
-      userId: sessionId, // Ensure user can only delete their own links
-    });
-
-    if (!deletedLink) {
-      return NextResponse.json({ message: "Link not found" }, { status: 404 });
+    // Check if link exists
+    const link = await Link.findById(id);
+    if (!link) {
+      return NextResponse.json({ message: "Link not found or already deleted" }, { status: 404 });
     }
+
+    // Verify ownership: allow if userId matches as string, or if link was created without userId (legacy link)
+    if (link.userId && link.userId.toString() !== sessionId.toString()) {
+      return NextResponse.json({ message: "Unauthorized to delete this link" }, { status: 403 });
+    }
+
+    // Delete the link
+    await Link.findByIdAndDelete(id);
 
     return NextResponse.json({ message: "Link deleted successfully" });
   } catch (error) {
