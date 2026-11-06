@@ -48,9 +48,15 @@ export async function POST(request: NextRequest) {
 
     let link = linkId ? await Link.findById(linkId) : null;
     if (!link && shortCode) {
+      const escapedCode = String(shortCode).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       link = await Link.findOne({
-        shortUrl: { $regex: `/${shortCode}$`, $options: "i" },
+        shortUrl: { $regex: `/${escapedCode}$`, $options: "i" },
       });
+      if (!link) {
+        link = await Link.findOne({
+          shortUrl: { $regex: escapedCode, $options: "i" },
+        });
+      }
     }
 
     // Dynamic Fallback 1: Match by domain if passed in body, notes, or origin
@@ -66,20 +72,20 @@ export async function POST(request: NextRequest) {
       const site = siteHint.replace(/^https?:\/\//, '').split('/')[0];
       if (site) {
         link = await Link.findOne({
-          destinationUrl: { $regex: site, $options: "i" }
+          originalUrl: { $regex: site, $options: "i" }
         }).sort({ updatedAt: -1 });
       }
     }
 
-    // Dynamic Fallback 2: If Webhook came from Razorpay without notes, attribute to the user's active campaign link pointing to vybexai
+    // Dynamic Fallback 2: If Webhook came from Razorpay without notes, attribute to active campaign link pointing to vybexai
     if (!link && (body.entity === "event" || body.event?.startsWith("payment.") || body.event?.startsWith("subscription."))) {
       link = await Link.findOne({
-        destinationUrl: { $regex: "vybexai", $options: "i" }
+        originalUrl: { $regex: "vybexai", $options: "i" }
       }).sort({ updatedAt: -1 });
 
-      // Fallback 3: If no vybex link found, attribute to the most recently created active campaign link
+      // Fallback 3: If no vybex link found, attribute to the most recently created or updated campaign link
       if (!link) {
-        link = await Link.findOne({}).sort({ createdAt: -1 });
+        link = await Link.findOne({}).sort({ updatedAt: -1, createdAt: -1 });
       }
     }
 
