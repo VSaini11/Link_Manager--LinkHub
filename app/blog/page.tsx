@@ -1,4 +1,6 @@
 import { Metadata } from 'next';
+
+export const dynamic = 'force-dynamic';
 import BlogPageClient from './BlogPageClient';
 import BlogStructuredData from '@/components/BlogStructuredData';
 
