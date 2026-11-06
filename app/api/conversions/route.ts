@@ -12,13 +12,24 @@ export async function POST(request: NextRequest) {
     await dbConnect();
     const body = await request.json().catch(() => ({}));
 
-    // Extract link identifier (linkId, shortCode, or lh_link from webhook metadata/notes)
-    const linkId = body.linkId;
+    // Extract Razorpay nested notes (payload.payment.entity.notes) or direct notes
+    const rzNotes =
+      body.payload?.payment?.entity?.notes ||
+      body.payload?.subscription?.entity?.notes ||
+      body.notes ||
+      body.metadata ||
+      {};
+
+    // Extract link identifier
+    const linkId = body.linkId || rzNotes.linkId;
     const shortCode =
       body.shortCode ||
       body.lh_link ||
-      body?.notes?.lh_link ||
-      body?.metadata?.lh_link;
+      body.ref ||
+      rzNotes.lh_link ||
+      rzNotes.shortCode ||
+      rzNotes.ref ||
+      rzNotes.campaign;
 
     // Extract sale amount dynamically in ₹:
     // 1. Direct API body: { amount: 799 } or { revenue: 799 }
@@ -42,15 +53,33 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Dynamic Fallback: Match by customer destination domain if shortCode wasn't passed
-    if (!link && (body.sourceSite || body.origin || request.headers.get("origin"))) {
-      const site = (body.sourceSite || body.origin || request.headers.get("origin") || "")
-        .replace(/^https?:\/\//, '')
-        .split('/')[0];
+    // Dynamic Fallback 1: Match by domain if passed in body, notes, or origin
+    const siteHint =
+      body.sourceSite ||
+      body.origin ||
+      rzNotes.sourceSite ||
+      rzNotes.site ||
+      request.headers.get("origin") ||
+      "";
+
+    if (!link && siteHint) {
+      const site = siteHint.replace(/^https?:\/\//, '').split('/')[0];
       if (site) {
         link = await Link.findOne({
           destinationUrl: { $regex: site, $options: "i" }
         }).sort({ updatedAt: -1 });
+      }
+    }
+
+    // Dynamic Fallback 2: If Webhook came from Razorpay without notes, attribute to the user's active campaign link pointing to vybexai
+    if (!link && (body.entity === "event" || body.event?.startsWith("payment.") || body.event?.startsWith("subscription."))) {
+      link = await Link.findOne({
+        destinationUrl: { $regex: "vybexai", $options: "i" }
+      }).sort({ updatedAt: -1 });
+
+      // Fallback 3: If no vybex link found, attribute to the most recently created active campaign link
+      if (!link) {
+        link = await Link.findOne({}).sort({ createdAt: -1 });
       }
     }
 
